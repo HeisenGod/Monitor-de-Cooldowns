@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timer de Cooldown - Veículos & Raid Pro</title>
+  <style>
+    :root {
+      --bg-dark: #0b0c10;
+      --card-bg: #151821;
+      --accent: #6366f1;
+      --vip-gold: #f59e0b;
+      --sound-green: #10b981;
+      --test-purple: #8b5cf6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border: #262a36;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    /* PRELOADER FUTURISTA */
+    #preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-dark);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    #preloader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-ring {
+      width: 70px;
+      height: 70px;
+      border: 4px solid rgba(99, 102, 241, 0.1);
+      border-top: 4px solid var(--accent);
+      border-right: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .loading-text {
+      margin-top: 20px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--text-main);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: pulseText 1.5s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulseText {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    .header-title {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 2.2rem;
+      color: #fff;
+      text-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    /* LAYOUT PRINCIPAL */
+    .app-layout {
+      display: flex;
+      gap: 20px;
+      max-width: 1150px;
+      width: 100%;
+      align-items: flex-start;
+      transition: all 0.3s ease;
+    }
+
+    /* SIDEBAR ESQUERDA */
+    .sidebar {
+      width: 290px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .summary-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .summary-card h3 {
+      font-size: 0.95rem;
+      color: #fff;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .summary-box {
+      background: #0f1117;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .summary-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .summary-timer {
+      font-family: monospace;
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-top: 2px;
+    }
+
+    .summary-subtext {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: normal;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    /* ESTILOS DE CONTADOR E HISTÓRICO */
+    .stats-counters {
+      display: flex;
+      gap: 10px;
+    }
+
+    .stat-box {
+      flex: 1;
+      background: #0f1117;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stat-number {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .history-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-clear-history {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      color: #fca5a5;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-clear-history:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .history-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .history-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .history-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .history-item {
+      background: #0f1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+    }
+
+    .history-item-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .history-badge {
+      font-size: 0.65rem;
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .history-item small {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+    }
+
+    /* CONTEÚDO DIREITO */
+    .main-content {
+      flex: 1;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      transition: all 0.3s ease;
+    }
+
+    .controls-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .type-selector {
+      display: flex;
+      flex: 3;
+      gap: 10px;
+      min-width: 280px;
+    }
+
+    .type-btn {
+      flex: 1;
+      padding: 12px;
+      background: #0f1117;
+      border: 2px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .type-btn.active {
+      border-color: var(--accent);
+      color: #fff;
+      background: rgba(99, 102, 241, 0.15);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.35);
+    }
+
+    .type-btn#btnRaid.active {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.15);
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
+    }
+
+    .mode-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+      background: #0f1117;
+      padding: 6px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.22s;
+    }
+
+    .mode-btn.active {
+      background: var(--border);
+      color: #fff;
+    }
+
+    .btn-action {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .settings-dropdown-wrapper {
+      position: relative;
+      display: flex;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .btn-gear {
+      width: 100%;
+      background: linear-gradient(135deg, #1a1e29 0%, #0f1117 100%);
+      border: 2px solid var(--border);
+      color: #a78bfa;
+    }
+
+    .btn-gear:hover {
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .settings-popover {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 270px;
+      background: #151821;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      z-index: 100;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .settings-popover.active {
+      display: flex;
+    }
+
+    .popover-header {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-compact {
+      width: 100%;
+      background: linear-gradient(135deg, #1e1b4b 0%, #0f1117 100%);
+      border: 2px solid #3730a3;
+      color: #818cf8;
+    }
+    .btn-compact:hover {
+      border-color: #6366f1;
+      color: #fff;
+    }
+    .btn-compact.compact-active {
+      background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+      border-color: #a5b4fc;
+      color: #fff;
+    }
+
+    .btn-vip {
+      width: 100%;
+      background: linear-gradient(135deg, #1d170e 0%, #0f1117 100%);
+      border: 2px solid #523e1b;
+      color: #d97706;
+    }
+    .btn-vip:hover {
+      border-color: #f59e0b;
+      color: #fbbf24;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+    }
+    .btn-vip.vip-active {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      border-color: #fef08a;
+      color: #000;
+      box-shadow: 0 0 18px rgba(245, 158, 11, 0.5);
+    }
+
+    .btn-sound {
+      width: 100%;
+      background: linear-gradient(135deg, #0e201b 0%, #0f1117 100%);
+      border: 2px solid #144e3e;
+      color: #059669;
+    }
+    .btn-sound:hover {
+      border-color: #10b981;
+      color: #34d399;
+    }
+    .btn-sound.sound-active {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-color: #a7f3d0;
+      color: #000;
+    }
+
+    .btn-sound-test {
+      width: 100%;
+      background: linear-gradient(135deg, #1a162e 0%, #0f1117 100%);
+      border: 2px solid #3c326b;
+      color: #a78bfa;
+    }
+    .btn-sound-test:hover {
+      background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+      border-color: #c4b5fd;
+      color: #fff;
+    }
+
+    .volume-control {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .volume-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .volume-slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 4px;
+      background: #0f1117;
+      outline: none;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .btn-start-all-master {
+      width: 100%;
+      padding: 22px;
+      background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+      border: 2px solid #a5b4fc;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1.25rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
+      transition: all 0.25s ease;
+    }
+
+    .btn-start-all-master:hover {
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 0 35px rgba(99, 102, 241, 0.7);
+    }
+
+    .btn-start-all-master:active {
+      transform: scale(0.98);
+    }
+
+    .btn-start-all-master small {
+      font-size: 0.85rem;
+      font-weight: normal;
+      opacity: 0.9;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+      gap: 12px;
+    }
+
+    .btn-rarity {
+      padding: 14px 10px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+
+    .btn-rarity:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.25);
+    }
+
+    .btn-rarity small {
+      font-size: 0.75rem;
+      opacity: 0.85;
+      font-weight: normal;
+    }
+
+    .btn-all-shortcut {
+      grid-column: 1 / -1;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px dashed var(--accent);
+      color: #a5b4fc;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-all-shortcut:hover {
+      background: rgba(99, 102, 241, 0.25);
+      color: #fff;
+    }
+
+    /* Cores das Raridades e Raid */
+    .raid { background: #ef44441a; color: #fca5a5; border-color: #ef4444; }
+    .easy { background: #10b9811a; color: #10b981; border-color: #10b981; }
+    .medium { background: #3b82f61a; color: #3b82f6; border-color: #3b82f6; }
+    .hard { background: #8b5cf61a; color: #8b5cf6; border-color: #8b5cf6; }
+    .elite { background: #f59e0b1a; color: #f59e0b; border-color: #f59e0b; }
+    .expert { background: #ec48991a; color: #ec4899; border-color: #ec4899; }
+    .inferno { background: #ef44441a; color: #ef4444; border-color: #ef4444; }
+    .armagedom { background: #b91c1c1a; color: #fca5a5; border-color: #b91c1c; }
+    .apocalypse { background: #6b21a81a; color: #d8b4fe; border-color: #a855f7; }
+    .john-wick { background: #d977061a; color: #fbbf24; border-color: #d97706; box-shadow: 0 0 12px rgba(217, 119, 6, 0.3); }
+
+    details summary {
+      cursor: pointer;
+      font-weight: bold;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      user-select: none;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border);
+    }
+
+    .config-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #0f1117;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .config-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .config-inputs input {
+      width: 42px;
+      padding: 3px;
+      text-align: center;
+      background: #151821;
+      border: 1px solid var(--border);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .timers-header {
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .delete-dropdown-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .btn-delete-popover-trigger {
+      padding: 6px 12px;
+      background: linear-gradient(135deg, #2b1114 0%, #0f1117 100%);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s ease;
+    }
+
+    .btn-delete-popover-trigger:hover {
+      background: #ef4444;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .delete-popover {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 220px;
+      background: #151821;
+      border: 1px solid #ef444444;
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      z-index: 100;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .delete-popover.active {
+      display: flex;
+    }
+
+    .btn-popover-action {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      border: 1px solid;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-popover-action.ready-del {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: #10b981;
+      color: #34d399;
+    }
+    .btn-popover-action.ready-del:hover {
+      background: #10b981;
+      color: #000;
+    }
+
+    .btn-popover-action.all-del {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+    .btn-popover-action.all-del:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .timer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .timer-item {
+      background: #0f1117;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .timer-item-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* BARRA DE PROGRESSO SUAVE */
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+      border-radius: 4px;
+      transition: width 1s linear;
+    }
+
+    @keyframes alertPulse {
+      0% {
+        border-color: #10b981;
+        box-shadow: 0 0 8px #10b981;
+        background: rgba(16, 185, 129, 0.08);
+      }
+      50% {
+        border-color: #34d399;
+        box-shadow: 0 0 25px #10b981, 0 0 45px rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.25);
+        transform: scale(1.01);
+      }
+      100% {
+        border-color: #10b981;
+        box-shadow: 0 0 8px #10b981;
+        background: rgba(16, 185, 129, 0.08);
+      }
+    }
+
+    .timer-item.ready {
+      animation: alertPulse 1.2s infinite ease-in-out;
+    }
+
+    .timer-item.ready .progress-bar-fill {
+      background: #10b981 !important;
+    }
+
+    .timer-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .badge-vip {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--vip-gold);
+      border: 1px solid var(--vip-gold);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+
+    .timer-display {
+      font-family: monospace;
+      font-size: 1.15rem;
+      font-weight: bold;
+    }
+
+    .ready-text {
+      color: #10b981;
+      font-weight: bold;
+      font-size: 1.05rem;
+    }
+
+    /* BOTÃO DE REMOVER COM MANTER PRESSIONADO (LONG PRESS) */
+    .btn-delete {
+      position: relative;
+      overflow: hidden;
+      background: #ef44441a;
+      color: #ef4444;
+      border: 1px solid #ef4444;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: bold;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-delete::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: #ef4444;
+      z-index: 0;
+      transition: width 3s linear;
+    }
+
+    .btn-delete.holding::before {
+      width: 100%;
+    }
+
+    .btn-delete span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn-delete:hover {
+      background: #ef444433;
+    }
+
+    .empty-msg {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 15px 0;
+    }
+
+    /* MODO COMPACTO */
+    body.compact-mode {
+      padding: 10px;
+    }
+
+    body.compact-mode .header-title {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+    }
+
+    body.compact-mode .sidebar {
+      display: none;
+    }
+
+    body.compact-mode .app-layout {
+      max-width: 650px;
+    }
+
+    body.compact-mode .card {
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+    }
+
+    body.compact-mode .controls-grid {
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    body.compact-mode .type-btn {
+      padding: 8px;
+      font-size: 0.85rem;
+    }
+
+    body.compact-mode .btn-rarity {
+      padding: 8px 4px;
+      font-size: 0.8rem;
+    }
+
+    body.compact-mode .btn-start-all-master {
+      padding: 12px;
+      font-size: 1rem;
+    }
+
+    body.compact-mode .btn-start-all-master small {
+      display: none;
+    }
+
+    body.compact-mode .timer-item {
+      padding: 10px 12px;
+      gap: 6px;
+    }
+
+    body.compact-mode .timer-display {
+      font-size: 1rem;
+    }
+
+    /* POPUP / MODAL CUSTOMIZADO */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(5px);
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 440px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(99, 102, 241, 0.25);
+      transform: translateY(-20px) scale(0.95);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .modal-icon {
+      font-size: 1.5rem;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-body {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .modal-body strong {
+      color: #fff;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    .btn-modal {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.88rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-modal-cancel {
+      background: #0f1117;
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+
+    .btn-modal-cancel:hover {
+      background: var(--border);
+      color: #fff;
+    }
+
+    .btn-modal-confirm {
+      background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+      border-color: #a5b4fc;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-modal-confirm:hover {
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.7);
+      transform: translateY(-1px);
+    }
+
+    .btn-modal-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+      border-color: #fca5a5;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-modal-danger:hover {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.7);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 850px) {
+      .app-layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PRELOADER ANIMADO -->
+  <div id="preloader">
+    <div class="loader-ring"></div>
+    <div class="loading-text">CARREGANDO MONITOR...</div>
+  </div>
+
+  <!-- MODAL / POPUP CUSTOMIZADO DO SITE -->
+  <div id="customModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-icon" id="modalIcon">⚠️</span>
+        <h3 class="modal-title" id="modalTitle">Título do Popup</h3>
+      </div>
+      <div class="modal-body" id="modalMessage">
+        Mensagem do popup aqui...
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal btn-modal-cancel" id="modalBtnCancel">Cancelar</button>
+        <button class="btn-modal btn-modal-confirm" id="modalBtnConfirm">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <h1 class="header-title">⏱️ Monitor de Cooldowns</h1>
+
+  <div class="app-layout">
+    
+    <!-- SIDEBAR ESQUERDA -->
+    <aside class="sidebar">
+      
+      <!-- STATUS DOS RESETS -->
+      <div class="summary-card">
+        <h3>📊 Status dos Resets</h3>
+
+        <div class="summary-box">
+          <div class="summary-label">⚡ Próximo Reset</div>
+          <div class="summary-timer" id="nextResetTimer" style="color: #10b981;">--:--:--</div>
+          <div class="summary-subtext" id="nextResetInfo">Nenhum cooldown ativo</div>
+        </div>
+
+        <div class="summary-box">
+          <div class="summary-label">🏁 Todos Liberados Em</div>
+          <div class="summary-timer" id="allResetTimer" style="color: #a5b4fc;">--:--:--</div>
+          <div class="summary-subtext" id="allResetInfo">Nenhum cooldown ativo</div>
+        </div>
+      </div>
+
+      <!-- HISTÓRICO E ESTATÍSTICAS -->
+      <div class="summary-card">
+        <h3>📈 Histórico de Resets</h3>
+
+        <div class="stats-counters">
+          <div class="stat-box">
+            <span id="statToday" class="stat-number">0</span>
+            <span class="stat-label">Hoje</span>
+          </div>
+          <div class="stat-box">
+            <span id="statTotal" class="stat-number">0</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+
+        <div class="history-header">
+          <div class="history-title">Últimas Conclusões</div>
+          <button class="btn-clear-history" onclick="clearHistory()" title="Limpar histórico de registros">🗑️ Limpar</button>
+        </div>
+
+        <ul id="historyList" class="history-list">
+          <li class="empty-msg" style="font-size: 0.8rem;">Nenhum reset registrado.</li>
+        </ul>
+      </div>
+
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main-content">
+      
+      <div class="card">
+        <div class="controls-grid">
+          <div class="type-selector">
+            <button class="type-btn active" id="btnHeli" onclick="selectType('Helicóptero')">🚁 Helicóptero</button>
+            <button class="type-btn" id="btnTank" onclick="selectType('Tank')">🛡️ Tank</button>
+            <button class="type-btn" id="btnRaid" onclick="selectType('Raid')">⚔️ Raid</button>
+          </div>
+
+          <div class="settings-dropdown-wrapper">
+            <button class="btn-action btn-gear" id="btnGear" onclick="toggleSettingsPopover(event)">
+              ⚙️ Opções
+            </button>
+            
+            <div class="settings-popover" id="settingsPopover">
+              <div class="popover-header">⚙️ Configurações</div>
+
+              <button class="btn-action btn-compact" id="btnCompact" onclick="toggleCompactMode()">
+                📱 Modo Mini: <span id="compactStatusText">OFF</span>
+              </button>
+
+              <button class="btn-action btn-vip" id="btnVip" onclick="toggleVip()">
+                👑 VIP: <span id="vipStatusText">OFF</span>
+              </button>
+
+              <button class="btn-action btn-sound sound-active" id="btnSound" onclick="toggleSound()">
+                🔔 Som: <span id="soundStatusText">ON</span>
+              </button>
+
+              <button class="btn-action btn-sound-test" onclick="playAlarmSound(selectedVehicle, true)">
+                🔊 Testar Som
+              </button>
+
+              <div class="volume-control">
+                <div class="volume-label">
+                  <span>Volume</span>
+                  <span id="volumeValue">80%</span>
+                </div>
+                <input type="range" id="volumeRange" class="volume-slider" min="0" max="100" value="80" oninput="changeVolume(this.value)" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-selector" id="modeSelectorContainer">
+          <button class="mode-btn active" id="modeBtnAllButtons" onclick="setControlMode('individual')">🕹️ Botões Individuais</button>
+          <button class="mode-btn" id="modeBtnSingleButton" onclick="setControlMode('single')">⚡ Botão Único</button>
+        </div>
+
+        <div id="actionButtonsContainer"></div>
+      </div>
+
+      <div class="card">
+        <details>
+          <summary>⚙️ Personalizar Tempos (Normal vs VIP)</summary>
+          <div id="configGrid" class="config-grid"></div>
+        </details>
+      </div>
+
+      <div class="card">
+        <div class="timers-header">
+          <span>Items em Cooldown</span>
+
+          <div class="delete-dropdown-wrapper">
+            <button class="btn-delete-popover-trigger" id="btnDeleteGear" onclick="toggleDeletePopover(event)">
+              ⚙️ Limpar
+            </button>
+            <div class="delete-popover" id="deletePopover">
+              <div class="popover-header" style="color: #fca5a5; border-color: #ef444444;">🗑️ Opções de Limpeza</div>
+              <button class="btn-popover-action ready-del" onclick="clearReadyCooldowns()">
+                ✅ Remover Concluídos
+              </button>
+              <button class="btn-popover-action all-del" onclick="clearAllCooldowns()">
+                🗑️ Remover Todos
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="timerList" class="timer-list">
+          <p class="empty-msg">Nenhum cooldown rodando no momento.</p>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    const rarities = [
+      { name: "Easy", key: "easy" },
+      { name: "Medium", key: "medium" },
+      { name: "Hard", key: "hard" },
+      { name: "Elite", key: "elite" },
+      { name: "Expert", key: "expert" },
+      { name: "Inferno", key: "inferno" },
+      { name: "Armagedom", key: "armagedom" },
+      { name: "Apocalypse", key: "apocalypse" },
+      { name: "John Wick", key: "john-wick", heliOnly: true }
+    ];
+
+    const defaultTimes = {
+      raid: { normal: { h: 0, m: 30 }, vip: { h: 0, m: 20 } },
+      helicoptero: { normal: { h: 1, m: 0 }, vip: { h: 0, m: 30 } },
+      tank: { normal: { h: 1, m: 0 }, vip: { h: 0, m: 30 } }
+    };
+
+    rarities.forEach(r => {
+      defaultTimes[r.key] = {
+        normal: { h: 1, m: 0 },
+        vip: { h: 0, m: 30 }
+      };
+    });
+
+    let selectedVehicle = 'Helicóptero';
+    let controlMode = localStorage.getItem('cooldown_control_mode') || 'individual';
+    let isVip = JSON.parse(localStorage.getItem('cooldown_is_vip')) || false;
+    let compactMode = JSON.parse(localStorage.getItem('cooldown_compact_mode')) || false;
+    let soundEnabled = JSON.parse(localStorage.getItem('cooldown_sound_enabled')) ?? true;
+
+    const rawVolume = localStorage.getItem('cooldown_sound_volume');
+    let soundVolume = rawVolume !== null ? parseFloat(rawVolume) : 0.8;
+    if (isNaN(soundVolume)) soundVolume = 0.8;
+
+    let savedTimes = JSON.parse(localStorage.getItem('cooldown_durations_v2')) || defaultTimes;
+    let activeCooldowns = JSON.parse(localStorage.getItem('cooldown_actives')) || [];
+
+    const STATS_KEY = 'cooldown_app_stats_v1';
+
+    /* LÓGICA DE MANTER PRESSIONADO PARA REMOVER (3 SEGUNDOS) */
+    let holdTimers = {};
+
+    function startHoldDelete(e, id) {
+      if (e.type === 'touchstart') {
+        e.preventDefault();
+      }
+      const btn = e.currentTarget;
+      btn.classList.add('holding');
+
+      if (holdTimers[id]) {
+        clearTimeout(holdTimers[id]);
+      }
+
+      holdTimers[id] = setTimeout(() => {
+        btn.classList.remove('holding');
+        delete holdTimers[id];
+        deleteCooldown(id);
+      }, 3000);
+    }
+
+    function cancelHoldDelete(e, id) {
+      const btn = e.currentTarget;
+      if (btn) btn.classList.remove('holding');
+      if (holdTimers[id]) {
+        clearTimeout(holdTimers[id]);
+        delete holdTimers[id];
+      }
+    }
+
+    /* 💬 GERENCIADOR DO POPUP/MODAL CUSTOMIZADO */
+    function showCustomModal({ title = 'Aviso', message = '', icon = '⚠️', confirmText = 'Confirmar', cancelText = 'Cancelar', isDanger = false, alertOnly = false }) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('customModal');
+        const titleEl = document.getElementById('modalTitle');
+        const iconEl = document.getElementById('modalIcon');
+        const bodyEl = document.getElementById('modalMessage');
+        const confirmBtn = document.getElementById('modalBtnConfirm');
+        const cancelBtn = document.getElementById('modalBtnCancel');
+
+        titleEl.textContent = title;
+        iconEl.textContent = icon;
+        bodyEl.innerHTML = message;
+
+        confirmBtn.textContent = confirmText;
+        confirmBtn.className = isDanger ? 'btn-modal btn-modal-danger' : 'btn-modal btn-modal-confirm';
+
+        if (alertOnly) {
+          cancelBtn.style.display = 'none';
+        } else {
+          cancelBtn.style.display = 'block';
+          cancelBtn.textContent = cancelText;
+        }
+
+        const cleanup = () => {
+          overlay.classList.remove('active');
+          confirmBtn.removeEventListener('click', onConfirm);
+          cancelBtn.removeEventListener('click', onCancel);
+        };
+
+        const onConfirm = () => { cleanup(); resolve(true); };
+        const onCancel = () => { cleanup(); resolve(false); };
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+
+        overlay.classList.add('active');
+      });
+    }
+
+    /* 🗣️ SÍNTESE DE VOZ COM FILA E TEMPO DE ESPERA */
+    let speechQueue = [];
+    let isSpeaking = false;
+
+    function speakAlert(text) {
+      if (!('speechSynthesis' in window) || !soundEnabled) return;
+      speechQueue.push(text);
+      processSpeechQueue();
+    }
+
+    function processSpeechQueue() {
+      if (isSpeaking || speechQueue.length === 0 || !soundEnabled) return;
+
+      isSpeaking = true;
+      const text = speechQueue.shift();
+
+      try {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'pt-BR';
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = soundVolume;
+
+        const voices = window.speechSynthesis.getVoices();
+        const ptVoice = voices.find(v => v.lang === 'pt-BR' || v.lang.startsWith('pt'));
+        if (ptVoice) utterance.voice = ptVoice;
+
+        const onSpeechFinish = () => {
+          setTimeout(() => {
+            isSpeaking = false;
+            processSpeechQueue();
+          }, 500);
+        };
+
+        utterance.onend = onSpeechFinish;
+        utterance.onerror = onSpeechFinish;
+
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.log("Erro de voz:", e);
+        isSpeaking = false;
+      }
+    }
+
+    /* 📈 ESTATÍSTICAS E HISTÓRICO */
+    function getStats() {
+      const defaultStats = { total: 0, today: 0, lastDate: '', history: [] };
+      return JSON.parse(localStorage.getItem(STATS_KEY)) || defaultStats;
+    }
+
+    function registerReset(itemName, rarityName) {
+      const stats = getStats();
+      const today = new Date().toLocaleDateString('pt-BR');
+
+      if (stats.lastDate !== today) {
+        stats.today = 0;
+        stats.lastDate = today;
+      }
+
+      stats.total++;
+      stats.today++;
+
+      const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      if (!stats.history) stats.history = [];
+
+      stats.history.unshift({
+        item: itemName,
+        rarity: rarityName,
+        time: `${today} às ${timeString}`
+      });
+
+      if (stats.history.length > 20) {
+        stats.history.pop();
+      }
+
+      localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+      renderStatsUI();
+    }
+
+    /* 🗑️ APAGAR HISTÓRICO DE REGISTROS */
+    async function clearHistory() {
+      const stats = getStats();
+      if (!stats.history || stats.history.length === 0) {
+        await showCustomModal({
+          title: 'Aviso',
+          icon: 'ℹ️',
+          message: 'Não há registros no histórico para limpar no momento.',
+          alertOnly: true,
+          confirmText: 'Entendido'
+        });
+        return;
+      }
+
+      const confirmClear = await showCustomModal({
+        title: 'Limpar Histórico',
+        icon: '🗑️',
+        message: 'Tem certeza que deseja apagar todo o **histórico de registros** e zerar os contadores?',
+        confirmText: 'Sim, Apagar Registro',
+        cancelText: 'Cancelar',
+        isDanger: true
+      });
+
+      if (confirmClear) {
+        const resetStats = { total: 0, today: 0, lastDate: '', history: [] };
+        localStorage.setItem(STATS_KEY, JSON.stringify(resetStats));
+        playDeleteSound();
+        renderStatsUI();
+      }
+    }
+
+    function renderStatsUI() {
+      const stats = getStats();
+
+      const totalEl = document.getElementById('statTotal');
+      const todayEl = document.getElementById('statToday');
+      const historyList = document.getElementById('historyList');
+
+      if (totalEl) totalEl.textContent = stats.total;
+      if (todayEl) todayEl.textContent = stats.today;
+
+      if (historyList) {
+        if (!stats.history || stats.history.length === 0) {
+          historyList.innerHTML = '<li class="empty-msg" style="font-size: 0.8rem;">Nenhum reset registrado.</li>';
+        } else {
+          historyList.innerHTML = stats.history.map(entry => `
+            <li class="history-item">
+              <div class="history-item-info">
+                <strong>${entry.item}</strong> 
+                <span class="history-badge">${entry.rarity}</span>
+              </div>
+              <small>${entry.time}</small>
+            </li>
+          `).join('');
+        }
+      }
+    }
+
+    function toggleSettingsPopover(e) {
+      e.stopPropagation();
+      const popover = document.getElementById('settingsPopover');
+      document.getElementById('deletePopover').classList.remove('active');
+      popover.classList.toggle('active');
+    }
+
+    function toggleDeletePopover(e) {
+      e.stopPropagation();
+      const popover = document.getElementById('deletePopover');
+      document.getElementById('settingsPopover').classList.remove('active');
+      popover.classList.toggle('active');
+    }
+
+    window.addEventListener('click', (e) => {
+      const setPopover = document.getElementById('settingsPopover');
+      const btnGear = document.getElementById('btnGear');
+      if (setPopover && setPopover.classList.contains('active') && !setPopover.contains(e.target) && !btnGear.contains(e.target)) {
+        setPopover.classList.remove('active');
+      }
+
+      const delPopover = document.getElementById('deletePopover');
+      const btnDeleteGear = document.getElementById('btnDeleteGear');
+      if (delPopover && delPopover.classList.contains('active') && !delPopover.contains(e.target) && !btnDeleteGear.contains(e.target)) {
+        delPopover.classList.remove('active');
+      }
+    });
+
+    async function clearReadyCooldowns() {
+      const now = Date.now();
+      const initialCount = activeCooldowns.length;
+      activeCooldowns = activeCooldowns.filter(item => item.endTime > now);
+      
+      if (activeCooldowns.length === initialCount) {
+        await showCustomModal({
+          title: 'Aviso',
+          icon: 'ℹ️',
+          message: 'Nenhum cooldown concluído para remover no momento.',
+          alertOnly: true,
+          confirmText: 'Entendido'
+        });
+      } else {
+        playDeleteSound();
+        saveAndRender();
+      }
+      document.getElementById('deletePopover').classList.remove('active');
+    }
+
+    async function clearAllCooldowns() {
+      if (activeCooldowns.length === 0) {
+        await showCustomModal({
+          title: 'Aviso',
+          icon: 'ℹ️',
+          message: 'Nenhum cooldown ativo para remover.',
+          alertOnly: true,
+          confirmText: 'Entendido'
+        });
+        document.getElementById('deletePopover').classList.remove('active');
+        return;
+      }
+
+      const confirmDelete = await showCustomModal({
+        title: 'Limpar Todos os Cooldowns',
+        icon: '🗑️',
+        message: 'Tem certeza que deseja remover <strong>TODOS</strong> os cooldowns da lista?',
+        confirmText: 'Sim, Remover Todos',
+        cancelText: 'Cancelar',
+        isDanger: true
+      });
+
+      if (confirmDelete) {
+        activeCooldowns = [];
+        playDeleteSound();
+        saveAndRender();
+      }
+      document.getElementById('deletePopover').classList.remove('active');
+    }
+
+    function changeVolume(value) {
+      soundVolume = value / 100;
+      localStorage.setItem('cooldown_sound_volume', soundVolume);
+      const volLabel = document.getElementById('volumeValue');
+      if (volLabel) volLabel.textContent = `${value}%`;
+    }
+
+    function playAddCooldownSound() {
+      if (!soundEnabled) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(soundVolume * 0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.12);
+      } catch (e) {
+        console.log("Erro de áudio:", e);
+      }
+    }
+
+    /* 🔊 EFEITO SONORO AO REMOVER */
+    function playDeleteSound() {
+      if (!soundEnabled) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(350, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.18);
+
+        gain.gain.setValueAtTime(soundVolume * 0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.18);
+      } catch (e) {
+        console.log("Erro de áudio:", e);
+      }
+    }
+
+    function playAlarmSound(vehicle, isTest = false) {
+      if (!soundEnabled) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+
+        const playBeep = (freq, time, duration) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + time);
+          gain.gain.setValueAtTime(soundVolume * 0.3, ctx.currentTime + time);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + time + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + time);
+          osc.stop(ctx.currentTime + time + duration);
+        };
+
+        playBeep(587.33, 0, 0.2);
+        playBeep(880, 0.2, 0.4);
+
+        if (isTest) {
+          speakAlert("Teste de som executado com sucesso.");
+        }
+      } catch (e) {
+        console.log("Erro de áudio:", e);
+      }
+    }
+
+    function selectType(type) {
+      selectedVehicle = type;
+      document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+
+      if (type === 'Helicóptero') document.getElementById('btnHeli').classList.add('active');
+      if (type === 'Tank') document.getElementById('btnTank').classList.add('active');
+      if (type === 'Raid') document.getElementById('btnRaid').classList.add('active');
+
+      renderActionButtons();
+    }
+
+    function setControlMode(mode) {
+      controlMode = mode;
+      localStorage.setItem('cooldown_control_mode', mode);
+
+      document.getElementById('modeBtnAllButtons').classList.toggle('active', mode === 'individual');
+      document.getElementById('modeBtnSingleButton').classList.toggle('active', mode === 'single');
+
+      renderActionButtons();
+    }
+
+    function toggleCompactMode() {
+      compactMode = !compactMode;
+      localStorage.setItem('cooldown_compact_mode', JSON.stringify(compactMode));
+      applyCompactUI();
+    }
+
+    function applyCompactUI() {
+      document.body.classList.toggle('compact-mode', compactMode);
+      const btn = document.getElementById('btnCompact');
+      const status = document.getElementById('compactStatusText');
+      if (btn && status) {
+        btn.classList.toggle('compact-active', compactMode);
+        status.textContent = compactMode ? 'ON' : 'OFF';
+      }
+    }
+
+    function toggleVip() {
+      isVip = !isVip;
+      localStorage.setItem('cooldown_is_vip', JSON.stringify(isVip));
+      applyVipUI();
+      renderConfigGrid();
+      renderActionButtons();
+    }
+
+    function applyVipUI() {
+      const btn = document.getElementById('btnVip');
+      const status = document.getElementById('vipStatusText');
+      if (btn && status) {
+        btn.classList.toggle('vip-active', isVip);
+        status.textContent = isVip ? 'ON' : 'OFF';
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem('cooldown_sound_enabled', JSON.stringify(soundEnabled));
+      applySoundUI();
+    }
+
+    function applySoundUI() {
+      const btn = document.getElementById('btnSound');
+      const status = document.getElementById('soundStatusText');
+      if (btn && status) {
+        btn.classList.toggle('sound-active', soundEnabled);
+        status.textContent = soundEnabled ? 'ON' : 'OFF';
+      }
+    }
+
+    function renderActionButtons() {
+      const container = document.getElementById('actionButtonsContainer');
+      if (!container) return;
+
+      if (selectedVehicle === 'Raid') {
+        container.innerHTML = `
+          <button class="btn-start-all-master raid" onclick="startCooldown('Raid', 'Raid', 'raid')">
+            ⚔️ Iniciar Cooldown de Raid
+            <small>Duração: ${getFormattedDuration('raid')}</small>
+          </button>
+        `;
+        return;
+      }
+
+      if (controlMode === 'single') {
+        const key = selectedVehicle.toLowerCase() === 'helicóptero' ? 'helicoptero' : 'tank';
+        container.innerHTML = `
+          <button class="btn-start-all-master" onclick="startCooldown('${selectedVehicle}', '${selectedVehicle}', '${key}')">
+            🚀 Iniciar Cooldown (${selectedVehicle})
+            <small>Duração: ${getFormattedDuration(key)}</small>
+          </button>
+        `;
+        return;
+      }
+
+      let html = '<div class="button-grid">';
+      const filteredRarities = rarities.filter(r => !r.heliOnly || selectedVehicle === 'Helicóptero');
+
+      filteredRarities.forEach(r => {
+        const dur = getFormattedDuration(r.key);
+        html += `
+          <button class="btn-rarity ${r.key}" onclick="startCooldown('${selectedVehicle}', '${r.name}', '${r.key}')">
+            <span>${r.name}</span>
+            <small>${dur}</small>
+          </button>
+        `;
+      });
+
+      html += `
+        <button class="btn-all-shortcut" onclick="startAllForSelected()">
+          ⚡ Iniciar Todos para ${selectedVehicle}
+        </button>
+      </div>`;
+
+      container.innerHTML = html;
+    }
+
+    function getFormattedDuration(key) {
+      const t = (savedTimes[key] && savedTimes[key][isVip ? 'vip' : 'normal']) || { h: 1, m: 0 };
+      return `${t.h > 0 ? t.h + 'h ' : ''}${t.m}m`;
+    }
+
+    async function startCooldown(vehicleName, rarityName, key) {
+      const id = `${vehicleName}-${rarityName}`;
+      const existingIdx = activeCooldowns.findIndex(c => c.id === id);
+      const now = Date.now();
+
+      if (existingIdx >= 0 && activeCooldowns[existingIdx].endTime > now) {
+        const confirmRestart = await showCustomModal({
+          title: 'Cooldown em Andamento',
+          icon: '⏱️',
+          message: `O Cooldown de <strong>${vehicleName} (${rarityName})</strong> já está ativo!<br><br>Deseja reiniciar este tempo do zero ou continuar com o contador atual?`,
+          confirmText: '🔄 Reiniciar do Zero',
+          cancelText: '▶️ Manter Atual'
+        });
+        
+        if (!confirmRestart) {
+          return;
+        }
+      }
+
+      const timeObj = (savedTimes[key] && savedTimes[key][isVip ? 'vip' : 'normal']) || { h: 1, m: 0 };
+      const totalSeconds = (timeObj.h * 3600) + (timeObj.m * 60);
+      const endTime = now + (totalSeconds * 1000);
+
+      const newItem = {
+        id: id,
+        vehicle: vehicleName,
+        rarity: rarityName,
+        key: key,
+        isVip: isVip,
+        startTime: now,
+        endTime: endTime,
+        duration: totalSeconds,
+        alerted: false
+      };
+
+      if (existingIdx >= 0) {
+        activeCooldowns[existingIdx] = newItem;
+      } else {
+        activeCooldowns.push(newItem);
+      }
+
+      playAddCooldownSound();
+      saveAndRender();
+    }
+
+    function startAllForSelected() {
+      const filteredRarities = rarities.filter(r => !r.heliOnly || selectedVehicle === 'Helicóptero');
+      filteredRarities.forEach(r => {
+        startCooldown(selectedVehicle, r.name, r.key);
+      });
+    }
+
+    function deleteCooldown(id) {
+      if (holdTimers[id]) {
+        clearTimeout(holdTimers[id]);
+        delete holdTimers[id];
+      }
+      activeCooldowns = activeCooldowns.filter(c => c.id !== id);
+      playDeleteSound();
+      saveAndRender();
+    }
+
+    function renderConfigGrid() {
+      const grid = document.getElementById('configGrid');
+      if (!grid) return;
+
+      const items = [
+        { name: 'Raid', key: 'raid' },
+        { name: 'Helicóptero (Padrão)', key: 'helicoptero' },
+        { name: 'Tank (Padrão)', key: 'tank' },
+        ...rarities
+      ];
+
+      grid.innerHTML = items.map(item => {
+        const key = item.key;
+        const timeData = savedTimes[key] || { normal: { h: 1, m: 0 }, vip: { h: 0, m: 30 } };
+
+        return `
+          <div class="config-item">
+            <strong style="font-size:0.85rem; color:#fff;">${item.name}</strong>
+            <div class="config-row">
+              <span>Normal:</span>
+              <div class="config-inputs">
+                <input type="number" min="0" max="24" value="${timeData.normal.h}" onchange="updateConfigTime('${key}', 'normal', 'h', this.value)"> h
+                <input type="number" min="0" max="59" value="${timeData.normal.m}" onchange="updateConfigTime('${key}', 'normal', 'm', this.value)"> m
+              </div>
+            </div>
+            <div class="config-row" style="color:var(--vip-gold);">
+              <span>VIP:</span>
+              <div class="config-inputs">
+                <input type="number" min="0" max="24" value="${timeData.vip.h}" onchange="updateConfigTime('${key}', 'vip', 'h', this.value)"> h
+                <input type="number" min="0" max="59" value="${timeData.vip.m}" onchange="updateConfigTime('${key}', 'vip', 'm', this.value)"> m
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateConfigTime(key, mode, field, value) {
+      if (!savedTimes[key]) {
+        savedTimes[key] = { normal: { h: 1, m: 0 }, vip: { h: 0, m: 30 } };
+      }
+      savedTimes[key][mode][field] = parseInt(value, 10) || 0;
+      localStorage.setItem('cooldown_durations_v2', JSON.stringify(savedTimes));
+      renderActionButtons();
+    }
+
+    function saveAndRender() {
+      localStorage.setItem('cooldown_actives', JSON.stringify(activeCooldowns));
+      updateTimers();
+    }
+
+    function updateTimers() {
+      const container = document.getElementById('timerList');
+      const now = Date.now();
+
+      if (!container) return;
+
+      if (activeCooldowns.length === 0) {
+        container.innerHTML = '<p class="empty-msg">Nenhum cooldown rodando no momento.</p>';
+        updateSidebarSummary();
+        return;
+      }
+
+      if (Object.keys(holdTimers).length > 0) {
+        updateSidebarSummary();
+        return;
+      }
+
+      activeCooldowns.sort((a, b) => a.endTime - b.endTime);
+
+      let html = '';
+
+      activeCooldowns.forEach(c => {
+        const remainingMs = c.endTime - now;
+        const isReady = remainingMs <= 0;
+
+        if (isReady && !c.alerted) {
+          c.alerted = true;
+          localStorage.setItem('cooldown_actives', JSON.stringify(activeCooldowns));
+          playAlarmSound(c.vehicle);
+          speakAlert(`Cooldown do ${c.vehicle} ${c.rarity} concluído!`);
+          registerReset(c.vehicle, c.rarity);
+        }
+
+        const totalMs = c.duration * 1000;
+        const elapsedMs = totalMs - Math.max(0, remainingMs);
+        const progressPercent = isReady ? 100 : Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100));
+
+        const timeFormatted = isReady ? 'PRONTO!' : formatTime(remainingMs);
+
+        html += `
+          <div class="timer-item ${isReady ? 'ready' : ''}">
+            <div class="timer-item-main">
+              <div class="timer-info">
+                <span class="badge ${c.key}">${c.rarity}</span>
+                <strong style="font-size: 0.95rem;">${c.vehicle}</strong>
+                ${c.isVip ? '<span class="badge-vip">VIP</span>' : ''}
+              </div>
+              <div class="${isReady ? 'ready-text' : 'timer-display'}">
+                ${timeFormatted}
+              </div>
+              <button class="btn-delete"
+                onmousedown="startHoldDelete(event, '${c.id}')"
+                onmouseup="cancelHoldDelete(event, '${c.id}')"
+                onmouseleave="cancelHoldDelete(event, '${c.id}')"
+                ontouchstart="startHoldDelete(event, '${c.id}')"
+                ontouchend="cancelHoldDelete(event, '${c.id}')"
+                ontouchcancel="cancelHoldDelete(event, '${c.id}')"
+                title="Segure por 3 segundos para remover">
+                <span>✕</span>
+              </button>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: ${progressPercent}%;"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      updateSidebarSummary();
+    }
+
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = totalSeconds % 60;
+
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updateSidebarSummary() {
+      const nextTimerEl = document.getElementById('nextResetTimer');
+      const nextInfoEl = document.getElementById('nextResetInfo');
+      const allTimerEl = document.getElementById('allResetTimer');
+      const allInfoEl = document.getElementById('allResetInfo');
+
+      const now = Date.now();
+      const running = activeCooldowns.filter(c => c.endTime > now);
+
+      if (running.length === 0) {
+        if (nextTimerEl) { nextTimerEl.textContent = '--:--:--'; nextTimerEl.style.color = '#10b981'; }
+        if (nextInfoEl) nextInfoEl.textContent = 'Nenhum cooldown ativo';
+        if (allTimerEl) { allTimerEl.textContent = '--:--:--'; allTimerEl.style.color = '#a5b4fc'; }
+        if (allInfoEl) allInfoEl.textContent = 'Nenhum cooldown ativo';
+        return;
+      }
+
+      const nextItem = running[0];
+      const nextMs = nextItem.endTime - now;
+      if (nextTimerEl) {
+        nextTimerEl.textContent = formatTime(nextMs);
+        nextTimerEl.style.color = '#10b981';
+      }
+      if (nextInfoEl) nextInfoEl.textContent = `${nextItem.vehicle} - ${nextItem.rarity}`;
+
+      const lastItem = running[running.length - 1];
+      const lastMs = lastItem.endTime - now;
+      if (allTimerEl) {
+        allTimerEl.textContent = formatTime(lastMs);
+        allTimerEl.style.color = '#a5b4fc';
+      }
+      if (allInfoEl) allInfoEl.textContent = `${running.length} item(ns) em andamento`;
+    }
+
+    window.addEventListener('load', () => {
+      const volRange = document.getElementById('volumeRange');
+      if (volRange) volRange.value = soundVolume * 100;
+      changeVolume(soundVolume * 100);
+
+      applyCompactUI();
+      applyVipUI();
+      applySoundUI();
+      renderStatsUI();
+      renderConfigGrid();
+      renderActionButtons();
+      updateTimers();
+
+      setInterval(updateTimers, 1000);
+
+      setTimeout(() => {
+        const preloader = document.getElementById('preloader');
+        if (preloader) preloader.classList.add('hidden');
+      }, 500);
+    });
+  </script>
+</body>
+</html>
