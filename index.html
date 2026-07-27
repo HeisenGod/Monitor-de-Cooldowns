@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Timer de Cooldown - Veículos & Raid Pro</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Monitor de Cooldowns</title>
   <style>
     :root {
       --bg-dark: #0b0c10;
@@ -343,7 +344,7 @@
       box-shadow: 0 0 15px rgba(99, 102, 241, 0.35);
     }
 
-    .type-btn#btnRaid.active {
+    .type-btn#btnInvasao.active {
       border-color: #ef4444;
       background: rgba(239, 68, 68, 0.15);
       box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
@@ -418,7 +419,7 @@
       position: absolute;
       top: calc(100% + 8px);
       right: 0;
-      width: 270px;
+      width: 280px;
       background: #151821;
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -426,7 +427,7 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
       z-index: 100;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .settings-popover.active {
@@ -459,22 +460,43 @@
       color: #fff;
     }
 
-    .btn-vip {
+    /* SELETORES DE VIP TIER */
+    .vip-select-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #0f1117;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #523e1b;
+    }
+
+    .vip-select-label {
+      font-size: 0.78rem;
+      font-weight: bold;
+      color: var(--vip-gold);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .vip-select {
       width: 100%;
-      background: linear-gradient(135deg, #1d170e 0%, #0f1117 100%);
-      border: 2px solid #523e1b;
-      color: #d97706;
-    }
-    .btn-vip:hover {
-      border-color: #f59e0b;
+      padding: 8px;
+      background: #151821;
+      border: 1px solid var(--vip-gold);
       color: #fbbf24;
-      box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      outline: none;
     }
-    .btn-vip.vip-active {
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-      border-color: #fef08a;
-      color: #000;
-      box-shadow: 0 0 18px rgba(245, 158, 11, 0.5);
+
+    .vip-select option {
+      background: #151821;
+      color: #fff;
     }
 
     .btn-sound {
@@ -614,8 +636,8 @@
       color: #fff;
     }
 
-    /* Cores das Raridades e Raid */
-    .raid { background: #ef44441a; color: #fca5a5; border-color: #ef4444; }
+    /* Cores das Raridades e Invasão */
+    .invasao { background: #ef44441a; color: #fca5a5; border-color: #ef4444; }
     .easy { background: #10b9811a; color: #10b981; border-color: #10b981; }
     .medium { background: #3b82f61a; color: #3b82f6; border-color: #3b82f6; }
     .hard { background: #8b5cf61a; color: #8b5cf6; border-color: #8b5cf6; }
@@ -636,7 +658,7 @@
 
     .config-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 10px;
       margin-top: 15px;
       padding-top: 15px;
@@ -657,7 +679,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
 
     .config-inputs input {
@@ -1109,11 +1131,42 @@
         position: static;
       }
     }
+
+    /* MENSAGEM DISCRETA */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10001;
+    }
+    .discreet-toast {
+      background: rgba(16, 185, 129, 0.95);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      font-size: 0.9rem;
+      font-weight: bold;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.3s, transform 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .discreet-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
 
-  <!-- PRELOADER ANIMADO -->
+  <!-- PRELOADER FUTURISTA -->
   <div id="preloader">
     <div class="loader-ring"></div>
     <div class="loading-text">CARREGANDO MONITOR...</div>
@@ -1195,7 +1248,7 @@
           <div class="type-selector">
             <button class="type-btn active" id="btnHeli" onclick="selectType('Helicóptero')">🚁 Helicóptero</button>
             <button class="type-btn" id="btnTank" onclick="selectType('Tank')">🛡️ Tank</button>
-            <button class="type-btn" id="btnRaid" onclick="selectType('Raid')">⚔️ Raid</button>
+            <button class="type-btn" id="btnInvasao" onclick="selectType('Invasão')">⚔️ Invasão</button>
           </div>
 
           <div class="settings-dropdown-wrapper">
@@ -1206,19 +1259,27 @@
             <div class="settings-popover" id="settingsPopover">
               <div class="popover-header">⚙️ Configurações</div>
 
+              <!-- SELETOR DE TIERS VIP -->
+              <div class="vip-select-box">
+                <span class="vip-select-label">👑 Nível VIP Ativo:</span>
+                <select id="vipTierSelect" class="vip-select" onchange="changeVipTier(this.value)">
+                  <option value="none">Sem VIP (Normal - 60m)</option>
+                  <option value="tier1">VIP Tier 1 (50m)</option>
+                  <option value="tier2">VIP Tier 2 (40m)</option>
+                  <option value="tier3">VIP Tier 3 (30m)</option>
+                  <option value="el_patron">VIP El Patron (10m)</option>
+                </select>
+              </div>
+
               <button class="btn-action btn-compact" id="btnCompact" onclick="toggleCompactMode()">
                 📱 Modo Mini: <span id="compactStatusText">OFF</span>
-              </button>
-
-              <button class="btn-action btn-vip" id="btnVip" onclick="toggleVip()">
-                👑 VIP: <span id="vipStatusText">OFF</span>
               </button>
 
               <button class="btn-action btn-sound sound-active" id="btnSound" onclick="toggleSound()">
                 🔔 Som: <span id="soundStatusText">ON</span>
               </button>
 
-              <button class="btn-action btn-sound-test" onclick="playAlarmSound(selectedVehicle, true)">
+              <button class="btn-action btn-sound-test" onclick="playAlarmSound(selectedVehicle)">
                 🔊 Testar Som
               </button>
 
@@ -1243,7 +1304,7 @@
 
       <div class="card">
         <details>
-          <summary>⚙️ Personalizar Tempos (Normal vs VIP)</summary>
+          <summary>⚙️ Personalizar Tempos (Tiers VIP)</summary>
           <div id="configGrid" class="config-grid"></div>
         </details>
       </div>
@@ -1290,22 +1351,44 @@
       { name: "John Wick", key: "john-wick", heliOnly: true }
     ];
 
+    /* CONFIGURAÇÃO DE TEMPOS PADRÃO POR TIER (INVASÃO FIXA EM 30M GERAL) */
     const defaultTimes = {
-      raid: { normal: { h: 0, m: 30 }, vip: { h: 0, m: 20 } },
-      helicoptero: { normal: { h: 1, m: 0 }, vip: { h: 0, m: 30 } },
-      tank: { normal: { h: 1, m: 0 }, vip: { h: 0, m: 30 } }
+      invasao: {
+        none: { h: 0, m: 30 },
+        tier1: { h: 0, m: 30 },
+        tier2: { h: 0, m: 30 },
+        tier3: { h: 0, m: 30 },
+        el_patron: { h: 0, m: 30 }
+      },
+      helicoptero: {
+        none: { h: 1, m: 0 },
+        tier1: { h: 0, m: 50 },
+        tier2: { h: 0, m: 40 },
+        tier3: { h: 0, m: 30 },
+        el_patron: { h: 0, m: 10 }
+      },
+      tank: {
+        none: { h: 1, m: 0 },
+        tier1: { h: 0, m: 50 },
+        tier2: { h: 0, m: 40 },
+        tier3: { h: 0, m: 30 },
+        el_patron: { h: 0, m: 10 }
+      }
     };
 
     rarities.forEach(r => {
       defaultTimes[r.key] = {
-        normal: { h: 1, m: 0 },
-        vip: { h: 0, m: 30 }
+        none: { h: 1, m: 0 },
+        tier1: { h: 0, m: 50 },
+        tier2: { h: 0, m: 40 },
+        tier3: { h: 0, m: 30 },
+        el_patron: { h: 0, m: 10 }
       };
     });
 
     let selectedVehicle = 'Helicóptero';
     let controlMode = localStorage.getItem('cooldown_control_mode') || 'individual';
-    let isVip = JSON.parse(localStorage.getItem('cooldown_is_vip')) || false;
+    let selectedVipTier = localStorage.getItem('cooldown_vip_tier_v4') || 'none';
     let compactMode = JSON.parse(localStorage.getItem('cooldown_compact_mode')) || false;
     let soundEnabled = JSON.parse(localStorage.getItem('cooldown_sound_enabled')) ?? true;
 
@@ -1313,10 +1396,45 @@
     let soundVolume = rawVolume !== null ? parseFloat(rawVolume) : 0.8;
     if (isNaN(soundVolume)) soundVolume = 0.8;
 
-    let savedTimes = JSON.parse(localStorage.getItem('cooldown_durations_v2')) || defaultTimes;
+    let savedTimes = JSON.parse(localStorage.getItem('cooldown_durations_v4')) || defaultTimes;
     let activeCooldowns = JSON.parse(localStorage.getItem('cooldown_actives')) || [];
 
     const STATS_KEY = 'cooldown_app_stats_v1';
+
+    /* SISTEMA DE FILA DE ÁUDIO COM PAUSA DE 2 SEGUNDOS */
+    let audioQueue = [];
+    let isPlayingAudio = false;
+
+    /* GARANTE COMPATIBILIDADE E FORÇA INVASÃO PARA 30M EM TODOS OS TIERS */
+    function normalizeSavedTimes() {
+      // Migração retrocompatível se houver 'raid' antigo nos dados salvos
+      if (savedTimes.raid) {
+        savedTimes.invasao = savedTimes.raid;
+        delete savedTimes.raid;
+      }
+
+      const keys = ['invasao', 'helicoptero', 'tank', ...rarities.map(r => r.key)];
+      keys.forEach(k => {
+        if (!savedTimes[k]) savedTimes[k] = {};
+        if (!savedTimes[k].none) savedTimes[k].none = savedTimes[k].normal || { h: 1, m: 0 };
+        if (!savedTimes[k].tier1) savedTimes[k].tier1 = { h: 0, m: 50 };
+        if (!savedTimes[k].tier2) savedTimes[k].tier2 = { h: 0, m: 40 };
+        if (!savedTimes[k].tier3) savedTimes[k].tier3 = { h: 0, m: 30 };
+        if (!savedTimes[k].el_patron) savedTimes[k].el_patron = { h: 0, m: 10 };
+      });
+
+      // Invasão sempre 30 min geral
+      savedTimes.invasao = {
+        none: { h: 0, m: 30 },
+        tier1: { h: 0, m: 30 },
+        tier2: { h: 0, m: 30 },
+        tier3: { h: 0, m: 30 },
+        el_patron: { h: 0, m: 30 }
+      };
+
+      localStorage.setItem('cooldown_durations_v4', JSON.stringify(savedTimes));
+    }
+    normalizeSavedTimes();
 
     /* LÓGICA DE MANTER PRESSIONADO PARA REMOVER (3 SEGUNDOS) */
     let holdTimers = {};
@@ -1388,48 +1506,85 @@
       });
     }
 
-    /* 🗣️ SÍNTESE DE VOZ COM FILA E TEMPO DE ESPERA */
-    let speechQueue = [];
-    let isSpeaking = false;
-
-    function speakAlert(text) {
-      if (!('speechSynthesis' in window) || !soundEnabled) return;
-      speechQueue.push(text);
-      processSpeechQueue();
+    /* 🎵 GERENCIAMENTO DE ÁUDIO EM FILA (2s de pausa entre os sons) */
+    function getAudioPath(vehicle) {
+      const v = (vehicle || '').toLowerCase();
+      if (v.includes('heli')) return 'som/avisos/Heli.mp3';
+      if (v.includes('tank')) return 'som/avisos/Tank.mp3';
+      if (v.includes('invasa') || v.includes('invasão') || v.includes('raid')) return 'som/avisos/Invasao.mp3';
+      return 'som/avisos/Heli.mp3';
     }
 
-    function processSpeechQueue() {
-      if (isSpeaking || speechQueue.length === 0 || !soundEnabled) return;
+    function playAudioFile(filePath) {
+      if (!soundEnabled) return;
+      audioQueue.push(filePath);
+      if (!isPlayingAudio) {
+        processAudioQueue();
+      }
+    }
 
-      isSpeaking = true;
-      const text = speechQueue.shift();
+    function processAudioQueue() {
+      if (audioQueue.length === 0 || !soundEnabled) {
+        isPlayingAudio = false;
+        return;
+      }
+
+      isPlayingAudio = true;
+      const nextFile = audioQueue.shift();
 
       try {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'pt-BR';
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.volume = soundVolume;
+        const audio = new Audio(nextFile);
+        audio.volume = soundVolume;
 
-        const voices = window.speechSynthesis.getVoices();
-        const ptVoice = voices.find(v => v.lang === 'pt-BR' || v.lang.startsWith('pt'));
-        if (ptVoice) utterance.voice = ptVoice;
-
-        const onSpeechFinish = () => {
+        const handleEnded = () => {
           setTimeout(() => {
-            isSpeaking = false;
-            processSpeechQueue();
-          }, 500);
+            processAudioQueue();
+          }, 2000);
         };
 
-        utterance.onend = onSpeechFinish;
-        utterance.onerror = onSpeechFinish;
+        audio.onended = handleEnded;
+        
+        audio.onerror = (e) => {
+          console.log('Erro ao carregar MP3:', e);
+          handleEnded();
+        };
 
-        window.speechSynthesis.speak(utterance);
+        audio.play().catch(e => {
+          console.log('Erro de reprodução MP3:', e);
+          handleEnded();
+        });
+
       } catch (e) {
-        console.log("Erro de voz:", e);
-        isSpeaking = false;
+        console.log('Erro no sistema de som:', e);
+        isPlayingAudio = false;
       }
+    }
+
+    function playAlarmSound(vehicle) {
+      if (!soundEnabled) return;
+      const path = getAudioPath(vehicle);
+      playAudioFile(path);
+    }
+
+    /* 💬 MENSAGEM DISCRETA NA TELA */
+    function showDiscreetMessage(msg) {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'discreet-toast';
+      toast.innerHTML = `🔔 <span>${msg}</span>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add('show'), 10);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
     }
 
     /* 📈 ESTATÍSTICAS E HISTÓRICO */
@@ -1494,7 +1649,6 @@
       if (confirmClear) {
         const resetStats = { total: 0, today: 0, lastDate: '', history: [] };
         localStorage.setItem(STATS_KEY, JSON.stringify(resetStats));
-        playDeleteSound();
         renderStatsUI();
       }
     }
@@ -1568,7 +1722,6 @@
           confirmText: 'Entendido'
         });
       } else {
-        playDeleteSound();
         saveAndRender();
       }
       document.getElementById('deletePopover').classList.remove('active');
@@ -1598,7 +1751,6 @@
 
       if (confirmDelete) {
         activeCooldowns = [];
-        playDeleteSound();
         saveAndRender();
       }
       document.getElementById('deletePopover').classList.remove('active');
@@ -1611,96 +1763,13 @@
       if (volLabel) volLabel.textContent = `${value}%`;
     }
 
-    function playAddCooldownSound() {
-      if (!soundEnabled) return;
-      try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        const ctx = new AudioContext();
-
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.12);
-        gain.gain.setValueAtTime(soundVolume * 0.25, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.12);
-      } catch (e) {
-        console.log("Erro de áudio:", e);
-      }
-    }
-
-    /* 🔊 EFEITO SONORO AO REMOVER */
-    function playDeleteSound() {
-      if (!soundEnabled) return;
-      try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        const ctx = new AudioContext();
-
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(350, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.18);
-
-        gain.gain.setValueAtTime(soundVolume * 0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.18);
-      } catch (e) {
-        console.log("Erro de áudio:", e);
-      }
-    }
-
-    function playAlarmSound(vehicle, isTest = false) {
-      if (!soundEnabled) return;
-      try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        const ctx = new AudioContext();
-
-        const playBeep = (freq, time, duration) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + time);
-          gain.gain.setValueAtTime(soundVolume * 0.3, ctx.currentTime + time);
-          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + time + duration);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + time);
-          osc.stop(ctx.currentTime + time + duration);
-        };
-
-        playBeep(587.33, 0, 0.2);
-        playBeep(880, 0.2, 0.4);
-
-        if (isTest) {
-          speakAlert("Teste de som executado com sucesso.");
-        }
-      } catch (e) {
-        console.log("Erro de áudio:", e);
-      }
-    }
-
     function selectType(type) {
       selectedVehicle = type;
       document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
 
       if (type === 'Helicóptero') document.getElementById('btnHeli').classList.add('active');
       if (type === 'Tank') document.getElementById('btnTank').classList.add('active');
-      if (type === 'Raid') document.getElementById('btnRaid').classList.add('active');
+      if (type === 'Invasão') document.getElementById('btnInvasao').classList.add('active');
 
       renderActionButtons();
     }
@@ -1731,25 +1800,26 @@
       }
     }
 
-    function toggleVip() {
-      isVip = !isVip;
-      localStorage.setItem('cooldown_is_vip', JSON.stringify(isVip));
-      applyVipUI();
+    /* ALTERAÇÃO DE NÍVEL VIP */
+    function changeVipTier(tier) {
+      selectedVipTier = tier;
+      localStorage.setItem('cooldown_vip_tier_v4', selectedVipTier);
       renderConfigGrid();
       renderActionButtons();
     }
 
     function applyVipUI() {
-      const btn = document.getElementById('btnVip');
-      const status = document.getElementById('vipStatusText');
-      if (btn && status) {
-        btn.classList.toggle('vip-active', isVip);
-        status.textContent = isVip ? 'ON' : 'OFF';
+      const select = document.getElementById('vipTierSelect');
+      if (select) {
+        select.value = selectedVipTier;
       }
     }
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
+      if (!soundEnabled) {
+        audioQueue = [];
+      }
       localStorage.setItem('cooldown_sound_enabled', JSON.stringify(soundEnabled));
       applySoundUI();
     }
@@ -1767,11 +1837,11 @@
       const container = document.getElementById('actionButtonsContainer');
       if (!container) return;
 
-      if (selectedVehicle === 'Raid') {
+      if (selectedVehicle === 'Invasão') {
         container.innerHTML = `
-          <button class="btn-start-all-master raid" onclick="startCooldown('Raid', 'Raid', 'raid')">
-            ⚔️ Iniciar Cooldown de Raid
-            <small>Duração: ${getFormattedDuration('raid')}</small>
+          <button class="btn-start-all-master invasao" onclick="startCooldown('Invasão', 'Invasão', 'invasao')">
+            ⚔️ Iniciar Cooldown de Invasão
+            <small>Duração: ${getFormattedDuration('invasao')}</small>
           </button>
         `;
         return;
@@ -1811,8 +1881,19 @@
     }
 
     function getFormattedDuration(key) {
-      const t = (savedTimes[key] && savedTimes[key][isVip ? 'vip' : 'normal']) || { h: 1, m: 0 };
+      const tier = selectedVipTier || 'none';
+      const t = (savedTimes[key] && savedTimes[key][tier]) || { h: 1, m: 0 };
       return `${t.h > 0 ? t.h + 'h ' : ''}${t.m}m`;
+    }
+
+    function getVipBadgeLabel(tier) {
+      switch (tier) {
+        case 'tier1': return 'VIP T1';
+        case 'tier2': return 'VIP T2';
+        case 'tier3': return 'VIP T3';
+        case 'el_patron': return 'EL PATRON';
+        default: return '';
+      }
     }
 
     async function startCooldown(vehicleName, rarityName, key) {
@@ -1834,7 +1915,7 @@
         }
       }
 
-      const timeObj = (savedTimes[key] && savedTimes[key][isVip ? 'vip' : 'normal']) || { h: 1, m: 0 };
+      const timeObj = (savedTimes[key] && savedTimes[key][selectedVipTier]) || { h: 1, m: 0 };
       const totalSeconds = (timeObj.h * 3600) + (timeObj.m * 60);
       const endTime = now + (totalSeconds * 1000);
 
@@ -1843,11 +1924,12 @@
         vehicle: vehicleName,
         rarity: rarityName,
         key: key,
-        isVip: isVip,
+        vipTier: selectedVipTier,
         startTime: now,
         endTime: endTime,
         duration: totalSeconds,
-        alerted: false
+        alerted: false,
+        lastReminderTime: null
       };
 
       if (existingIdx >= 0) {
@@ -1856,7 +1938,6 @@
         activeCooldowns.push(newItem);
       }
 
-      playAddCooldownSound();
       saveAndRender();
     }
 
@@ -1873,7 +1954,6 @@
         delete holdTimers[id];
       }
       activeCooldowns = activeCooldowns.filter(c => c.id !== id);
-      playDeleteSound();
       saveAndRender();
     }
 
@@ -1882,44 +1962,55 @@
       if (!grid) return;
 
       const items = [
-        { name: 'Raid', key: 'raid' },
+        { name: 'Invasão (Geral 30m)', key: 'invasao' },
         { name: 'Helicóptero (Padrão)', key: 'helicoptero' },
         { name: 'Tank (Padrão)', key: 'tank' },
         ...rarities
       ];
 
+      const tiersConfig = [
+        { id: 'none', label: 'Normal' },
+        { id: 'tier1', label: 'Tier 1' },
+        { id: 'tier2', label: 'Tier 2' },
+        { id: 'tier3', label: 'Tier 3' },
+        { id: 'el_patron', label: 'El Patron' }
+      ];
+
       grid.innerHTML = items.map(item => {
         const key = item.key;
-        const timeData = savedTimes[key] || { normal: { h: 1, m: 0 }, vip: { h: 0, m: 30 } };
+        const timeData = savedTimes[key] || {};
+
+        let rowsHtml = tiersConfig.map(tier => {
+          const t = timeData[tier.id] || { h: 0, m: 0 };
+          const isVipTier = tier.id !== 'none';
+          const style = isVipTier ? 'color: var(--vip-gold);' : '';
+
+          return `
+            <div class="config-row" style="${style}">
+              <span>${tier.label}:</span>
+              <div class="config-inputs">
+                <input type="number" min="0" max="24" value="${t.h}" onchange="updateConfigTime('${key}', '${tier.id}', 'h', this.value)"> h
+                <input type="number" min="0" max="59" value="${t.m}" onchange="updateConfigTime('${key}', '${tier.id}', 'm', this.value)"> m
+              </div>
+            </div>
+          `;
+        }).join('');
 
         return `
           <div class="config-item">
             <strong style="font-size:0.85rem; color:#fff;">${item.name}</strong>
-            <div class="config-row">
-              <span>Normal:</span>
-              <div class="config-inputs">
-                <input type="number" min="0" max="24" value="${timeData.normal.h}" onchange="updateConfigTime('${key}', 'normal', 'h', this.value)"> h
-                <input type="number" min="0" max="59" value="${timeData.normal.m}" onchange="updateConfigTime('${key}', 'normal', 'm', this.value)"> m
-              </div>
-            </div>
-            <div class="config-row" style="color:var(--vip-gold);">
-              <span>VIP:</span>
-              <div class="config-inputs">
-                <input type="number" min="0" max="24" value="${timeData.vip.h}" onchange="updateConfigTime('${key}', 'vip', 'h', this.value)"> h
-                <input type="number" min="0" max="59" value="${timeData.vip.m}" onchange="updateConfigTime('${key}', 'vip', 'm', this.value)"> m
-              </div>
-            </div>
+            ${rowsHtml}
           </div>
         `;
       }).join('');
     }
 
-    function updateConfigTime(key, mode, field, value) {
-      if (!savedTimes[key]) {
-        savedTimes[key] = { normal: { h: 1, m: 0 }, vip: { h: 0, m: 30 } };
-      }
-      savedTimes[key][mode][field] = parseInt(value, 10) || 0;
-      localStorage.setItem('cooldown_durations_v2', JSON.stringify(savedTimes));
+    function updateConfigTime(key, tier, field, value) {
+      if (!savedTimes[key]) savedTimes[key] = {};
+      if (!savedTimes[key][tier]) savedTimes[key][tier] = { h: 0, m: 0 };
+
+      savedTimes[key][tier][field] = parseInt(value, 10) || 0;
+      localStorage.setItem('cooldown_durations_v4', JSON.stringify(savedTimes));
       renderActionButtons();
     }
 
@@ -1955,10 +2046,26 @@
 
         if (isReady && !c.alerted) {
           c.alerted = true;
+          c.lastReminderTime = Date.now();
+          
           localStorage.setItem('cooldown_actives', JSON.stringify(activeCooldowns));
+          
+          showDiscreetMessage(`${c.vehicle} ${c.rarity} concluído!`);
           playAlarmSound(c.vehicle);
-          speakAlert(`Cooldown do ${c.vehicle} ${c.rarity} concluído!`);
           registerReset(c.vehicle, c.rarity);
+          
+        } else if (isReady && c.alerted) {
+          if (!c.lastReminderTime) {
+            c.lastReminderTime = Date.now();
+          }
+          
+          if (Date.now() - c.lastReminderTime >= 120000) {
+            c.lastReminderTime = Date.now();
+            localStorage.setItem('cooldown_actives', JSON.stringify(activeCooldowns));
+            
+            showDiscreetMessage(`Lembrete: ${c.vehicle} ${c.rarity} aguardando!`);
+            playAlarmSound(c.vehicle);
+          }
         }
 
         const totalMs = c.duration * 1000;
@@ -1966,6 +2073,7 @@
         const progressPercent = isReady ? 100 : Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100));
 
         const timeFormatted = isReady ? 'PRONTO!' : formatTime(remainingMs);
+        const vipLabel = (c.vehicle !== 'Invasão') ? getVipBadgeLabel(c.vipTier) : '';
 
         html += `
           <div class="timer-item ${isReady ? 'ready' : ''}">
@@ -1973,7 +2081,7 @@
               <div class="timer-info">
                 <span class="badge ${c.key}">${c.rarity}</span>
                 <strong style="font-size: 0.95rem;">${c.vehicle}</strong>
-                ${c.isVip ? '<span class="badge-vip">VIP</span>' : ''}
+                ${vipLabel ? `<span class="badge-vip">${vipLabel}</span>` : ''}
               </div>
               <div class="${isReady ? 'ready-text' : 'timer-display'}">
                 ${timeFormatted}
