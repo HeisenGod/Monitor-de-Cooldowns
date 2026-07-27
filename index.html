@@ -1404,6 +1404,41 @@
     /* SISTEMA DE FILA DE ÁUDIO COM PAUSA DE 2 SEGUNDOS */
     let audioQueue = [];
     let isPlayingAudio = false;
+	let audioUnlocked = false;
+	
+	async function unlockAudio() {
+
+    if (audioUnlocked) return;
+
+    audioUnlocked = true;
+
+    const audios = [
+        "Som/avisos/Heli.mp3",
+        "Som/avisos/Invasao.mp3",
+        "Som/avisos/Tank.mp3"
+    ];
+
+    for (const src of audios) {
+
+        try {
+
+            const audio = new Audio(src);
+
+            audio.volume = 0;
+
+            await audio.play();
+
+            audio.pause();
+
+            audio.currentTime = 0;
+
+        } catch (e) {
+            console.log("Falha ao desbloquear:", src);
+        }
+
+    }
+
+}
 
     /* GARANTE COMPATIBILIDADE E FORÇA INVASÃO PARA 30M EM TODOS OS TIERS */
     function normalizeSavedTimes() {
@@ -1897,7 +1932,8 @@
     }
 
     async function startCooldown(vehicleName, rarityName, key) {
-      const id = `${vehicleName}-${rarityName}`;
+      await unlockAudio();
+	  const id = `${vehicleName}-${rarityName}`;
       const existingIdx = activeCooldowns.findIndex(c => c.id === id);
       const now = Date.now();
 
