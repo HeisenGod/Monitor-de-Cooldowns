@@ -1509,10 +1509,10 @@
     /* 🎵 GERENCIAMENTO DE ÁUDIO EM FILA (2s de pausa entre os sons) */
     function getAudioPath(vehicle) {
       const v = (vehicle || '').toLowerCase();
-      if (v.includes('heli')) return 'som/avisos/Heli.mp3';
-      if (v.includes('tank')) return 'som/avisos/Tank.mp3';
-      if (v.includes('invasa') || v.includes('invasão') || v.includes('raid')) return 'som/avisos/Invasao.mp3';
-      return 'som/avisos/Heli.mp3';
+      if (v.includes('heli')) return 'Som/avisos/Heli.mp3';
+      if (v.includes('tank')) return 'Som/avisos/Tank.mp3';
+      if (v.includes('invasa') || v.includes('invasão') || v.includes('raid')) return 'Som/avisos/Invasao.mp3';
+      return 'Som/avisos/Heli.mp3';
     }
 
     function playAudioFile(filePath) {
