@@ -781,6 +781,7 @@
 
     /* Cores das Raridades e Invasão */
     .invasao { background: #ef44441a; color: #fca5a5; border-color: #ef4444; }
+    .helicoptero, .tank { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border-color: #6366f1; }
     .easy { background: #10b9811a; color: #10b981; border-color: #10b981; }
     .medium { background: #3b82f61a; color: #3b82f6; border-color: #3b82f6; }
     .hard { background: #8b5cf61a; color: #8b5cf6; border-color: #8b5cf6; }
@@ -1449,7 +1450,6 @@
       <!-- CARD DEDICADO DE FARM (OCULTO POR PADRÃO, EXIBIDO APENAS SE FARM ESTIVER SELECIONADO) -->
       <div class="card" id="farmCardSection" style="display: none;">
 
-
         <!-- MODO TEMPORIZADOR (REGRESSIVO COM HORAS, MINUTOS E SEGUNDOS) -->
         <div id="farmTimerSection" class="farm-section">
           <div class="farm-inputs-grid">
@@ -1602,15 +1602,24 @@
     isRunning: false
   };
 
-  /* SISTEMA DE FILA E CONTROLE DE ÁUDIO */
-  let audioQueue = [];
-  let isPlayingAudio = false;
+  /* SISTEMA DE CONTROLE DE ÁUDIO E AUDIO DUCKING */
+  let loopAudio = null;
+  let activeAlertsCount = 0;
+  const DUCK_FACTOR = 0.2; // Reduz o volume do som em loop para 20% durante avisos
   let audioUnlocked = false;
-  let currentAudio = null;
+
+  function updateLoopVolume() {
+    if (loopAudio) {
+      if (activeAlertsCount > 0) {
+        loopAudio.volume = soundVolume * DUCK_FACTOR;
+      } else {
+        loopAudio.volume = soundVolume;
+      }
+    }
+  }
 
   async function unlockAudio() {
     if (audioUnlocked) return;
-    audioUnlocked = true;
 
     const audios = [
         "Som/avisos/alerta.mp3",
@@ -1619,6 +1628,7 @@
         "Som/avisos/Tank.mp3"
     ];
 
+    let allOk = true;
     for (const src of audios) {
         try {
             const audio = new Audio(src);
@@ -1627,19 +1637,71 @@
             audio.pause();
             audio.currentTime = 0;
         } catch (e) {
+            allOk = false;
             console.log("Falha ao desbloquear:", src);
         }
+    }
+    if (allOk) {
+      audioUnlocked = true;
     }
   }
 
   function stopAudio() {
-    audioQueue = [];
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-      currentAudio = null;
+    if (loopAudio) {
+      loopAudio.pause();
+      loopAudio.currentTime = 0;
+      loopAudio = null;
     }
-    isPlayingAudio = false;
+    activeAlertsCount = 0;
+  }
+
+  function getAudioPath(vehicle) {
+    const v = (vehicle || '').toLowerCase();
+    if (v.includes('farm')) return 'Som/avisos/alerta.mp3';
+    if (v.includes('heli')) return 'Som/avisos/Heli.mp3';
+    if (v.includes('tank')) return 'Som/avisos/Tank.mp3';
+    if (v.includes('invasa') || v.includes('invasão') || v.includes('raid')) return 'Som/avisos/Invasao.mp3';
+    return 'Som/avisos/alerta.mp3';
+  }
+
+  function playAlarmSound(vehicle, loop = false) {
+    if (!soundEnabled) return;
+    const path = getAudioPath(vehicle);
+    playAudioFile(path, loop);
+  }
+
+  function playAudioFile(filePath, loop = false) {
+    if (!soundEnabled) return;
+
+    if (loop) {
+      if (loopAudio) {
+        loopAudio.pause();
+        loopAudio.currentTime = 0;
+      }
+      loopAudio = new Audio(filePath);
+      loopAudio.loop = true;
+      updateLoopVolume();
+      loopAudio.play().catch(e => console.log('Erro ao tocar áudio em loop:', e));
+    } else {
+      const alertAudio = new Audio(filePath);
+      alertAudio.volume = soundVolume;
+
+      activeAlertsCount++;
+      updateLoopVolume();
+
+      const handleAlertEnd = () => {
+        activeAlertsCount = Math.max(0, activeAlertsCount - 1);
+        updateLoopVolume();
+      };
+
+      alertAudio.addEventListener('ended', handleAlertEnd);
+      alertAudio.addEventListener('error', handleAlertEnd);
+
+      alertAudio.play().catch(e => {
+        console.log('Erro ao tocar aviso:', e);
+        handleAlertEnd();
+      });
+    }
   }
 
   /* GARANTE COMPATIBILIDADE E FORÇA INVASÃO PARA 30M EM TODOS OS TIERS */
@@ -1693,7 +1755,7 @@
   }
 
   function cancelHoldDelete(e, id) {
-    const btn = e.currentTarget;
+    const btn = e.currentTarget || (e.target ? e.target.closest('.btn-delete') : null);
     if (btn) btn.classList.remove('holding');
     if (holdTimers[id]) {
       clearTimeout(holdTimers[id]);
@@ -1729,80 +1791,19 @@
         overlay.classList.remove('active');
         confirmBtn.removeEventListener('click', onConfirm);
         cancelBtn.removeEventListener('click', onCancel);
+        overlay.removeEventListener('click', onOverlayClick);
       };
 
       const onConfirm = () => { cleanup(); resolve(true); };
       const onCancel = () => { cleanup(); resolve(false); };
+      const onOverlayClick = (e) => { if (e.target === overlay) { cleanup(); resolve(false); } };
 
       confirmBtn.addEventListener('click', onConfirm);
       cancelBtn.addEventListener('click', onCancel);
+      overlay.addEventListener('click', onOverlayClick);
 
       overlay.classList.add('active');
     });
-  }
-
-  /* GERENCIAMENTO DE ÁUDIO EM FILA */
-  function getAudioPath(vehicle) {
-    const v = (vehicle || '').toLowerCase();
-    if (v.includes('farm')) return 'Som/avisos/alerta.mp3';
-    if (v.includes('heli')) return 'Som/avisos/Heli.mp3';
-    if (v.includes('tank')) return 'Som/avisos/Tank.mp3';
-    if (v.includes('invasa') || v.includes('invasão') || v.includes('raid')) return 'Som/avisos/Invasao.mp3';
-    return 'Som/avisos/alerta.mp3';
-  }
-
-  function playAudioFile(filePath) {
-    if (!soundEnabled) return;
-    audioQueue.push(filePath);
-    if (!isPlayingAudio) {
-      processAudioQueue();
-    }
-  }
-
-  function processAudioQueue() {
-    if (audioQueue.length === 0 || !soundEnabled) {
-      isPlayingAudio = false;
-      currentAudio = null;
-      return;
-    }
-
-    isPlayingAudio = true;
-    const nextFile = audioQueue.shift();
-
-    try {
-      currentAudio = new Audio(nextFile);
-      currentAudio.volume = soundVolume;
-
-      const handleEnded = () => {
-        currentAudio = null;
-        setTimeout(() => {
-          processAudioQueue();
-        }, 2000);
-      };
-
-      currentAudio.onended = handleEnded;
-      
-      currentAudio.onerror = (e) => {
-        console.log('Erro ao carregar MP3:', e);
-        handleEnded();
-      };
-
-      currentAudio.play().catch(e => {
-        console.log('Erro de reprodução MP3:', e);
-        handleEnded();
-      });
-
-    } catch (e) {
-      console.log('Erro no sistema de som:', e);
-      isPlayingAudio = false;
-      currentAudio = null;
-    }
-  }
-
-  function playAlarmSound(vehicle) {
-    if (!soundEnabled) return;
-    const path = getAudioPath(vehicle);
-    playAudioFile(path);
   }
 
   /* MENSAGEM DISCRETA NA TELA */
@@ -2000,6 +2001,7 @@
     localStorage.setItem('cooldown_sound_volume', soundVolume);
     const volLabel = document.getElementById('volumeValue');
     if (volLabel) volLabel.textContent = `${value}%`;
+    updateLoopVolume();
   }
 
   function selectType(type) {
@@ -2086,7 +2088,6 @@
     const modeContainer = document.getElementById('modeSelectorContainer');
     if (!container) return;
 
-    /* OCULTA O SELETOR DE MODO SE FOR FARM OU INVASÃO */
     if (modeContainer) {
       modeContainer.style.display = (selectedVehicle === 'Farm' || selectedVehicle === 'Invasão') ? 'none' : 'flex';
     }
@@ -2147,7 +2148,9 @@
   function getFormattedDuration(key) {
     const tier = selectedVipTier || 'none';
     const t = (savedTimes[key] && savedTimes[key][tier]) || { h: 1, m: 0 };
-    return `${t.h > 0 ? t.h + 'h ' : ''}${t.m}m`;
+    const h = parseInt(t.h, 10) || 0;
+    const m = parseInt(t.m, 10) || 0;
+    return `${h > 0 ? h + 'h ' : ''}${m}m`;
   }
 
   function getVipBadgeLabel(tier) {
@@ -2181,7 +2184,9 @@
     }
 
     const timeObj = (savedTimes[key] && savedTimes[key][selectedVipTier]) || { h: 1, m: 0 };
-    const totalSeconds = (timeObj.h * 3600) + (timeObj.m * 60);
+    const h = parseInt(timeObj.h, 10) || 0;
+    const m = parseInt(timeObj.m, 10) || 0;
+    const totalSeconds = (h * 3600) + (m * 60);
     const endTime = now + (totalSeconds * 1000);
 
     const newItem = {
@@ -2252,6 +2257,7 @@
   }
 
   function startFarmTimer() {
+    stopAudio();
     unlockAudio();
     const now = Date.now();
 
@@ -2278,7 +2284,6 @@
     }
   }
 
-  /* REINICIAR TEMPORIZADOR: PARA QUALQUER ÁUDIO EM EXECUÇÃO */
   function resetFarmTimer() {
     stopAudio();
     const dur = getFarmInputDurationMs();
@@ -2327,9 +2332,8 @@
     }
   }
 
-  /* CRONÔMETRO DE FARM (SEM ÁUDIO) */
+  /* CRONÔMETRO DE FARM (SEM SOM AO PAUSAR/FINALIZAR) */
   function startFarmStopwatch() {
-    unlockAudio();
     if (!farmStopwatchState.isRunning) {
       const now = Date.now();
       farmStopwatchState.startTime = now - farmStopwatchState.elapsedMs;
@@ -2400,7 +2404,7 @@
         if (!farmTimerState.alerted) {
           farmTimerState.alerted = true;
           showDiscreetMessage("🌾 Temporizador de Farm concluído!");
-          playAlarmSound('Farm');
+          playAlarmSound('Farm', true);
           registerReset('Farm', 'Temporizador');
         }
         saveFarmTimerState();
@@ -2491,11 +2495,6 @@
       return;
     }
 
-    if (Object.keys(holdTimers).length > 0) {
-      updateSidebarSummary();
-      return;
-    }
-
     activeCooldowns.sort((a, b) => a.endTime - b.endTime);
 
     let html = '';
@@ -2534,6 +2533,7 @@
 
       const timeFormatted = isReady ? 'PRONTO!' : formatTime(remainingMs);
       const vipLabel = (c.vehicle !== 'Invasão') ? getVipBadgeLabel(c.vipTier) : '';
+      const isHolding = !!holdTimers[c.id];
 
       html += `
         <div class="timer-item ${isReady ? 'ready' : ''}">
@@ -2546,12 +2546,13 @@
             <div class="${isReady ? 'ready-text' : 'timer-display'}">
               ${timeFormatted}
             </div>
-            <button class="btn-delete"
+            <button class="btn-delete ${isHolding ? 'holding' : ''}"
               onmousedown="startHoldDelete(event, '${c.id}')"
               onmouseup="cancelHoldDelete(event, '${c.id}')"
               onmouseleave="cancelHoldDelete(event, '${c.id}')"
               ontouchstart="startHoldDelete(event, '${c.id}')"
               ontouchend="cancelHoldDelete(event, '${c.id}')"
+              ontouchmove="cancelHoldDelete(event, '${c.id}')"
               ontouchcancel="cancelHoldDelete(event, '${c.id}')"
               title="Segure por 3 segundos para remover">
               <span>✕</span>
