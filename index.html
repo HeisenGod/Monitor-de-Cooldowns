@@ -309,6 +309,142 @@
       transition: all 0.3s ease;
     }
 
+    /* CONTROLE DE FARM DE DURAÇÃO E TEMPO */
+    .farm-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .farm-header h3 {
+      font-size: 1.15rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .farm-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .farm-inputs-grid {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .farm-input-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #0f1117;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    .farm-input-group input {
+      width: 50px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: bold;
+      text-align: center;
+      outline: none;
+    }
+
+    .farm-input-group span {
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .farm-display {
+      font-family: monospace;
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--vip-gold);
+      text-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+      margin: 8px 0;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    .farm-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .btn-farm-start {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid #10b981;
+      color: #34d399;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-farm-start:hover:not(:disabled) {
+      background: #10b981;
+      color: #000;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-farm-pause {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid #f59e0b;
+      color: #fbbf24;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-farm-pause:hover:not(:disabled) {
+      background: #f59e0b;
+      color: #000;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-farm-reset {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-farm-reset:hover {
+      background: #ef4444;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-farm-start:disabled, .btn-farm-pause:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
+
     .controls-grid {
       display: flex;
       flex-wrap: wrap;
@@ -348,6 +484,13 @@
       border-color: #ef4444;
       background: rgba(239, 68, 68, 0.15);
       box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
+    }
+
+    .type-btn#btnFarm.active {
+      border-color: var(--vip-gold);
+      background: rgba(245, 158, 11, 0.15);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
     }
 
     .mode-selector {
@@ -1249,6 +1392,7 @@
             <button class="type-btn active" id="btnHeli" onclick="selectType('Helicóptero')">🚁 Helicóptero</button>
             <button class="type-btn" id="btnTank" onclick="selectType('Tank')">🛡️ Tank</button>
             <button class="type-btn" id="btnInvasao" onclick="selectType('Invasão')">⚔️ Invasão</button>
+            <button class="type-btn" id="btnFarm" onclick="selectType('Farm')">🌾 Farm</button>
           </div>
 
           <div class="settings-dropdown-wrapper">
@@ -1302,6 +1446,45 @@
         <div id="actionButtonsContainer"></div>
       </div>
 
+      <!-- CARD DEDICADO DE FARM (OCULTO POR PADRÃO, EXIBIDO APENAS SE FARM ESTIVER SELECIONADO) -->
+      <div class="card" id="farmCardSection" style="display: none;">
+
+
+        <!-- MODO TEMPORIZADOR (REGRESSIVO COM HORAS, MINUTOS E SEGUNDOS) -->
+        <div id="farmTimerSection" class="farm-section">
+          <div class="farm-inputs-grid">
+            <div class="farm-input-group">
+              <input type="number" id="farmHours" min="0" max="99" value="0" placeholder="00" oninput="updateFarmTimerInputs()">
+              <span>h</span>
+            </div>
+            <div class="farm-input-group">
+              <input type="number" id="farmMinutes" min="0" max="59" value="30" placeholder="00" oninput="updateFarmTimerInputs()">
+              <span>m</span>
+            </div>
+            <div class="farm-input-group">
+              <input type="number" id="farmSeconds" min="0" max="59" value="0" placeholder="00" oninput="updateFarmTimerInputs()">
+              <span>s</span>
+            </div>
+          </div>
+          <div class="farm-display" id="farmTimerDisplay">00:30:00</div>
+          <div class="farm-controls">
+            <button class="btn-farm-start" id="btnFarmTimerStart" onclick="startFarmTimer()">▶️ Iniciar</button>
+            <button class="btn-farm-pause" id="btnFarmTimerPause" onclick="pauseFarmTimer()" disabled>⏸️ Pausar</button>
+            <button class="btn-farm-reset" onclick="resetFarmTimer()">🔄 Reiniciar</button>
+          </div>
+        </div>
+
+        <!-- MODO CRONÔMETRO (PROGRESSIVO PARTINDO DE 00:00:00) -->
+        <div id="farmStopwatchSection" class="farm-section" style="display:none;">
+          <div class="farm-display" id="farmStopwatchDisplay">00:00:00</div>
+          <div class="farm-controls">
+            <button class="btn-farm-start" id="btnFarmStopwatchStart" onclick="startFarmStopwatch()">▶️ Iniciar Farm</button>
+            <button class="btn-farm-pause" id="btnFarmStopwatchPause" onclick="pauseFarmStopwatch()" disabled>⏸️ Pausar</button>
+            <button class="btn-farm-reset" onclick="resetFarmStopwatch()">🔄 Zerar</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <details>
           <summary>⚙️ Personalizar Tempos (Tiers VIP)</summary>
@@ -1339,874 +1522,1125 @@
   </div>
 
   <script>
-    const rarities = [
-      { name: "Easy", key: "easy" },
-      { name: "Medium", key: "medium" },
-      { name: "Hard", key: "hard" },
-      { name: "Elite", key: "elite" },
-      { name: "Expert", key: "expert" },
-      { name: "Inferno", key: "inferno" },
-      { name: "Armagedom", key: "armagedom" },
-      { name: "Apocalypse", key: "apocalypse" },
-      { name: "John Wick", key: "john-wick", heliOnly: true }
-    ];
+  const rarities = [
+    { name: "Easy", key: "easy" },
+    { name: "Medium", key: "medium" },
+    { name: "Hard", key: "hard" },
+    { name: "Elite", key: "elite" },
+    { name: "Expert", key: "expert" },
+    { name: "Inferno", key: "inferno" },
+    { name: "Armagedom", key: "armagedom" },
+    { name: "Apocalypse", key: "apocalypse" },
+    { name: "John Wick", key: "john-wick", heliOnly: true }
+  ];
 
-    /* CONFIGURAÇÃO DE TEMPOS PADRÃO POR TIER (INVASÃO FIXA EM 30M GERAL) */
-    const defaultTimes = {
-      invasao: {
-        none: { h: 0, m: 30 },
-        tier1: { h: 0, m: 30 },
-        tier2: { h: 0, m: 30 },
-        tier3: { h: 0, m: 30 },
-        el_patron: { h: 0, m: 30 }
-      },
-      helicoptero: {
-        none: { h: 1, m: 0 },
-        tier1: { h: 0, m: 50 },
-        tier2: { h: 0, m: 40 },
-        tier3: { h: 0, m: 30 },
-        el_patron: { h: 0, m: 10 }
-      },
-      tank: {
-        none: { h: 1, m: 0 },
-        tier1: { h: 0, m: 50 },
-        tier2: { h: 0, m: 40 },
-        tier3: { h: 0, m: 30 },
-        el_patron: { h: 0, m: 10 }
-      }
+  /* CONFIGURAÇÃO DE TEMPOS PADRÃO POR TIER (INVASÃO FIXA EM 30M GERAL) */
+  const defaultTimes = {
+    invasao: {
+      none: { h: 0, m: 30 },
+      tier1: { h: 0, m: 30 },
+      tier2: { h: 0, m: 30 },
+      tier3: { h: 0, m: 30 },
+      el_patron: { h: 0, m: 30 }
+    },
+    helicoptero: {
+      none: { h: 1, m: 0 },
+      tier1: { h: 0, m: 50 },
+      tier2: { h: 0, m: 40 },
+      tier3: { h: 0, m: 30 },
+      el_patron: { h: 0, m: 10 }
+    },
+    tank: {
+      none: { h: 1, m: 0 },
+      tier1: { h: 0, m: 50 },
+      tier2: { h: 0, m: 40 },
+      tier3: { h: 0, m: 30 },
+      el_patron: { h: 0, m: 10 }
+    }
+  };
+
+  rarities.forEach(r => {
+    defaultTimes[r.key] = {
+      none: { h: 1, m: 0 },
+      tier1: { h: 0, m: 50 },
+      tier2: { h: 0, m: 40 },
+      tier3: { h: 0, m: 30 },
+      el_patron: { h: 0, m: 10 }
     };
+  });
 
-    rarities.forEach(r => {
-      defaultTimes[r.key] = {
-        none: { h: 1, m: 0 },
-        tier1: { h: 0, m: 50 },
-        tier2: { h: 0, m: 40 },
-        tier3: { h: 0, m: 30 },
-        el_patron: { h: 0, m: 10 }
-      };
-    });
+  let selectedVehicle = 'Helicóptero';
+  let controlMode = localStorage.getItem('cooldown_control_mode') || 'individual';
+  let selectedVipTier = localStorage.getItem('cooldown_vip_tier_v4') || 'none';
+  let compactMode = JSON.parse(localStorage.getItem('cooldown_compact_mode')) || false;
+  let soundEnabled = JSON.parse(localStorage.getItem('cooldown_sound_enabled')) ?? true;
 
-    let selectedVehicle = 'Helicóptero';
-    let controlMode = localStorage.getItem('cooldown_control_mode') || 'individual';
-    let selectedVipTier = localStorage.getItem('cooldown_vip_tier_v4') || 'none';
-    let compactMode = JSON.parse(localStorage.getItem('cooldown_compact_mode')) || false;
-    let soundEnabled = JSON.parse(localStorage.getItem('cooldown_sound_enabled')) ?? true;
+  const rawVolume = localStorage.getItem('cooldown_sound_volume');
+  let soundVolume = rawVolume !== null ? parseFloat(rawVolume) : 0.8;
+  if (isNaN(soundVolume)) soundVolume = 0.8;
 
-    const rawVolume = localStorage.getItem('cooldown_sound_volume');
-    let soundVolume = rawVolume !== null ? parseFloat(rawVolume) : 0.8;
-    if (isNaN(soundVolume)) soundVolume = 0.8;
+  let savedTimes = JSON.parse(localStorage.getItem('cooldown_durations_v4')) || defaultTimes;
+  let activeCooldowns = JSON.parse(localStorage.getItem('cooldown_actives')) || [];
 
-    let savedTimes = JSON.parse(localStorage.getItem('cooldown_durations_v4')) || defaultTimes;
-    let activeCooldowns = JSON.parse(localStorage.getItem('cooldown_actives')) || [];
+  const STATS_KEY = 'cooldown_app_stats_v1';
 
-    const STATS_KEY = 'cooldown_app_stats_v1';
+  /* SISTEMA DE FARM (TEMPORIZADOR E CRONÔMETRO) */
+  let farmMode = localStorage.getItem('farm_mode') || 'timer';
+  let farmTimerState = JSON.parse(localStorage.getItem('farm_timer_state_v3')) || {
+    h: 0,
+    m: 30,
+    s: 0,
+    remainingMs: 30 * 60 * 1000,
+    endTime: null,
+    isRunning: false,
+    alerted: false
+  };
 
-    /* SISTEMA DE FILA DE ÁUDIO COM PAUSA DE 2 SEGUNDOS */
-    let audioQueue = [];
-    let isPlayingAudio = false;
-	let audioUnlocked = false;
-	
-	async function unlockAudio() {
+  let farmStopwatchState = JSON.parse(localStorage.getItem('farm_stopwatch_state')) || {
+    elapsedMs: 0,
+    startTime: null,
+    isRunning: false
+  };
 
+  /* SISTEMA DE FILA E CONTROLE DE ÁUDIO */
+  let audioQueue = [];
+  let isPlayingAudio = false;
+  let audioUnlocked = false;
+  let currentAudio = null;
+
+  async function unlockAudio() {
     if (audioUnlocked) return;
-
     audioUnlocked = true;
 
     const audios = [
+        "alerta.mp3",
         "Som/avisos/Heli.mp3",
         "Som/avisos/Invasao.mp3",
         "Som/avisos/Tank.mp3"
     ];
 
     for (const src of audios) {
-
         try {
-
             const audio = new Audio(src);
-
             audio.volume = 0;
-
             await audio.play();
-
             audio.pause();
-
             audio.currentTime = 0;
-
         } catch (e) {
             console.log("Falha ao desbloquear:", src);
         }
+    }
+  }
 
+  function stopAudio() {
+    audioQueue = [];
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+    }
+    isPlayingAudio = false;
+  }
+
+  /* GARANTE COMPATIBILIDADE E FORÇA INVASÃO PARA 30M EM TODOS OS TIERS */
+  function normalizeSavedTimes() {
+    if (savedTimes.raid) {
+      savedTimes.invasao = savedTimes.raid;
+      delete savedTimes.raid;
     }
 
-}
-
-    /* GARANTE COMPATIBILIDADE E FORÇA INVASÃO PARA 30M EM TODOS OS TIERS */
-    function normalizeSavedTimes() {
-      // Migração retrocompatível se houver 'raid' antigo nos dados salvos
-      if (savedTimes.raid) {
-        savedTimes.invasao = savedTimes.raid;
-        delete savedTimes.raid;
-      }
-
-      const keys = ['invasao', 'helicoptero', 'tank', ...rarities.map(r => r.key)];
-      keys.forEach(k => {
-        if (!savedTimes[k]) savedTimes[k] = {};
-        if (!savedTimes[k].none) savedTimes[k].none = savedTimes[k].normal || { h: 1, m: 0 };
-        if (!savedTimes[k].tier1) savedTimes[k].tier1 = { h: 0, m: 50 };
-        if (!savedTimes[k].tier2) savedTimes[k].tier2 = { h: 0, m: 40 };
-        if (!savedTimes[k].tier3) savedTimes[k].tier3 = { h: 0, m: 30 };
-        if (!savedTimes[k].el_patron) savedTimes[k].el_patron = { h: 0, m: 10 };
-      });
-
-      // Invasão sempre 30 min geral
-      savedTimes.invasao = {
-        none: { h: 0, m: 30 },
-        tier1: { h: 0, m: 30 },
-        tier2: { h: 0, m: 30 },
-        tier3: { h: 0, m: 30 },
-        el_patron: { h: 0, m: 30 }
-      };
-
-      localStorage.setItem('cooldown_durations_v4', JSON.stringify(savedTimes));
-    }
-    normalizeSavedTimes();
-
-    /* LÓGICA DE MANTER PRESSIONADO PARA REMOVER (3 SEGUNDOS) */
-    let holdTimers = {};
-
-    function startHoldDelete(e, id) {
-      if (e.type === 'touchstart') {
-        e.preventDefault();
-      }
-      const btn = e.currentTarget;
-      btn.classList.add('holding');
-
-      if (holdTimers[id]) {
-        clearTimeout(holdTimers[id]);
-      }
-
-      holdTimers[id] = setTimeout(() => {
-        btn.classList.remove('holding');
-        delete holdTimers[id];
-        deleteCooldown(id);
-      }, 3000);
-    }
-
-    function cancelHoldDelete(e, id) {
-      const btn = e.currentTarget;
-      if (btn) btn.classList.remove('holding');
-      if (holdTimers[id]) {
-        clearTimeout(holdTimers[id]);
-        delete holdTimers[id];
-      }
-    }
-
-    /* 💬 GERENCIADOR DO POPUP/MODAL CUSTOMIZADO */
-    function showCustomModal({ title = 'Aviso', message = '', icon = '⚠️', confirmText = 'Confirmar', cancelText = 'Cancelar', isDanger = false, alertOnly = false }) {
-      return new Promise((resolve) => {
-        const overlay = document.getElementById('customModal');
-        const titleEl = document.getElementById('modalTitle');
-        const iconEl = document.getElementById('modalIcon');
-        const bodyEl = document.getElementById('modalMessage');
-        const confirmBtn = document.getElementById('modalBtnConfirm');
-        const cancelBtn = document.getElementById('modalBtnCancel');
-
-        titleEl.textContent = title;
-        iconEl.textContent = icon;
-        bodyEl.innerHTML = message;
-
-        confirmBtn.textContent = confirmText;
-        confirmBtn.className = isDanger ? 'btn-modal btn-modal-danger' : 'btn-modal btn-modal-confirm';
-
-        if (alertOnly) {
-          cancelBtn.style.display = 'none';
-        } else {
-          cancelBtn.style.display = 'block';
-          cancelBtn.textContent = cancelText;
-        }
-
-        const cleanup = () => {
-          overlay.classList.remove('active');
-          confirmBtn.removeEventListener('click', onConfirm);
-          cancelBtn.removeEventListener('click', onCancel);
-        };
-
-        const onConfirm = () => { cleanup(); resolve(true); };
-        const onCancel = () => { cleanup(); resolve(false); };
-
-        confirmBtn.addEventListener('click', onConfirm);
-        cancelBtn.addEventListener('click', onCancel);
-
-        overlay.classList.add('active');
-      });
-    }
-
-    /* 🎵 GERENCIAMENTO DE ÁUDIO EM FILA (2s de pausa entre os sons) */
-    function getAudioPath(vehicle) {
-      const v = (vehicle || '').toLowerCase();
-      if (v.includes('heli')) return 'Som/avisos/Heli.mp3';
-      if (v.includes('tank')) return 'Som/avisos/Tank.mp3';
-      if (v.includes('invasa') || v.includes('invasão') || v.includes('raid')) return 'Som/avisos/Invasao.mp3';
-      return 'Som/avisos/Heli.mp3';
-    }
-
-    function playAudioFile(filePath) {
-      if (!soundEnabled) return;
-      audioQueue.push(filePath);
-      if (!isPlayingAudio) {
-        processAudioQueue();
-      }
-    }
-
-    function processAudioQueue() {
-      if (audioQueue.length === 0 || !soundEnabled) {
-        isPlayingAudio = false;
-        return;
-      }
-
-      isPlayingAudio = true;
-      const nextFile = audioQueue.shift();
-
-      try {
-        const audio = new Audio(nextFile);
-        audio.volume = soundVolume;
-
-        const handleEnded = () => {
-          setTimeout(() => {
-            processAudioQueue();
-          }, 2000);
-        };
-
-        audio.onended = handleEnded;
-        
-        audio.onerror = (e) => {
-          console.log('Erro ao carregar MP3:', e);
-          handleEnded();
-        };
-
-        audio.play().catch(e => {
-          console.log('Erro de reprodução MP3:', e);
-          handleEnded();
-        });
-
-      } catch (e) {
-        console.log('Erro no sistema de som:', e);
-        isPlayingAudio = false;
-      }
-    }
-
-    function playAlarmSound(vehicle) {
-      if (!soundEnabled) return;
-      const path = getAudioPath(vehicle);
-      playAudioFile(path);
-    }
-
-    /* 💬 MENSAGEM DISCRETA NA TELA */
-    function showDiscreetMessage(msg) {
-      let container = document.getElementById('toast-container');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        document.body.appendChild(container);
-      }
-      const toast = document.createElement('div');
-      toast.className = 'discreet-toast';
-      toast.innerHTML = `🔔 <span>${msg}</span>`;
-      container.appendChild(toast);
-      
-      setTimeout(() => toast.classList.add('show'), 10);
-      
-      setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-      }, 4000);
-    }
-
-    /* 📈 ESTATÍSTICAS E HISTÓRICO */
-    function getStats() {
-      const defaultStats = { total: 0, today: 0, lastDate: '', history: [] };
-      return JSON.parse(localStorage.getItem(STATS_KEY)) || defaultStats;
-    }
-
-    function registerReset(itemName, rarityName) {
-      const stats = getStats();
-      const today = new Date().toLocaleDateString('pt-BR');
-
-      if (stats.lastDate !== today) {
-        stats.today = 0;
-        stats.lastDate = today;
-      }
-
-      stats.total++;
-      stats.today++;
-
-      const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-      if (!stats.history) stats.history = [];
-
-      stats.history.unshift({
-        item: itemName,
-        rarity: rarityName,
-        time: `${today} às ${timeString}`
-      });
-
-      if (stats.history.length > 20) {
-        stats.history.pop();
-      }
-
-      localStorage.setItem(STATS_KEY, JSON.stringify(stats));
-      renderStatsUI();
-    }
-
-    /* 🗑️ APAGAR HISTÓRICO DE REGISTROS */
-    async function clearHistory() {
-      const stats = getStats();
-      if (!stats.history || stats.history.length === 0) {
-        await showCustomModal({
-          title: 'Aviso',
-          icon: 'ℹ️',
-          message: 'Não há registros no histórico para limpar no momento.',
-          alertOnly: true,
-          confirmText: 'Entendido'
-        });
-        return;
-      }
-
-      const confirmClear = await showCustomModal({
-        title: 'Limpar Histórico',
-        icon: '🗑️',
-        message: 'Tem certeza que deseja apagar todo o **histórico de registros** e zerar os contadores?',
-        confirmText: 'Sim, Apagar Registro',
-        cancelText: 'Cancelar',
-        isDanger: true
-      });
-
-      if (confirmClear) {
-        const resetStats = { total: 0, today: 0, lastDate: '', history: [] };
-        localStorage.setItem(STATS_KEY, JSON.stringify(resetStats));
-        renderStatsUI();
-      }
-    }
-
-    function renderStatsUI() {
-      const stats = getStats();
-
-      const totalEl = document.getElementById('statTotal');
-      const todayEl = document.getElementById('statToday');
-      const historyList = document.getElementById('historyList');
-
-      if (totalEl) totalEl.textContent = stats.total;
-      if (todayEl) todayEl.textContent = stats.today;
-
-      if (historyList) {
-        if (!stats.history || stats.history.length === 0) {
-          historyList.innerHTML = '<li class="empty-msg" style="font-size: 0.8rem;">Nenhum reset registrado.</li>';
-        } else {
-          historyList.innerHTML = stats.history.map(entry => `
-            <li class="history-item">
-              <div class="history-item-info">
-                <strong>${entry.item}</strong> 
-                <span class="history-badge">${entry.rarity}</span>
-              </div>
-              <small>${entry.time}</small>
-            </li>
-          `).join('');
-        }
-      }
-    }
-
-    function toggleSettingsPopover(e) {
-      e.stopPropagation();
-      const popover = document.getElementById('settingsPopover');
-      document.getElementById('deletePopover').classList.remove('active');
-      popover.classList.toggle('active');
-    }
-
-    function toggleDeletePopover(e) {
-      e.stopPropagation();
-      const popover = document.getElementById('deletePopover');
-      document.getElementById('settingsPopover').classList.remove('active');
-      popover.classList.toggle('active');
-    }
-
-    window.addEventListener('click', (e) => {
-      const setPopover = document.getElementById('settingsPopover');
-      const btnGear = document.getElementById('btnGear');
-      if (setPopover && setPopover.classList.contains('active') && !setPopover.contains(e.target) && !btnGear.contains(e.target)) {
-        setPopover.classList.remove('active');
-      }
-
-      const delPopover = document.getElementById('deletePopover');
-      const btnDeleteGear = document.getElementById('btnDeleteGear');
-      if (delPopover && delPopover.classList.contains('active') && !delPopover.contains(e.target) && !btnDeleteGear.contains(e.target)) {
-        delPopover.classList.remove('active');
-      }
+    const keys = ['invasao', 'helicoptero', 'tank', ...rarities.map(r => r.key)];
+    keys.forEach(k => {
+      if (!savedTimes[k]) savedTimes[k] = {};
+      if (!savedTimes[k].none) savedTimes[k].none = savedTimes[k].normal || { h: 1, m: 0 };
+      if (!savedTimes[k].tier1) savedTimes[k].tier1 = { h: 0, m: 50 };
+      if (!savedTimes[k].tier2) savedTimes[k].tier2 = { h: 0, m: 40 };
+      if (!savedTimes[k].tier3) savedTimes[k].tier3 = { h: 0, m: 30 };
+      if (!savedTimes[k].el_patron) savedTimes[k].el_patron = { h: 0, m: 10 };
     });
 
-    async function clearReadyCooldowns() {
-      const now = Date.now();
-      const initialCount = activeCooldowns.length;
-      activeCooldowns = activeCooldowns.filter(item => item.endTime > now);
-      
-      if (activeCooldowns.length === initialCount) {
-        await showCustomModal({
-          title: 'Aviso',
-          icon: 'ℹ️',
-          message: 'Nenhum cooldown concluído para remover no momento.',
-          alertOnly: true,
-          confirmText: 'Entendido'
-        });
+    savedTimes.invasao = {
+      none: { h: 0, m: 30 },
+      tier1: { h: 0, m: 30 },
+      tier2: { h: 0, m: 30 },
+      tier3: { h: 0, m: 30 },
+      el_patron: { h: 0, m: 30 }
+    };
+
+    localStorage.setItem('cooldown_durations_v4', JSON.stringify(savedTimes));
+  }
+  normalizeSavedTimes();
+
+  /* LÓGICA DE MANTER PRESSIONADO PARA REMOVER (3 SEGUNDOS) */
+  let holdTimers = {};
+
+  function startHoldDelete(e, id) {
+    if (e.type === 'touchstart') {
+      e.preventDefault();
+    }
+    const btn = e.currentTarget;
+    btn.classList.add('holding');
+
+    if (holdTimers[id]) {
+      clearTimeout(holdTimers[id]);
+    }
+
+    holdTimers[id] = setTimeout(() => {
+      btn.classList.remove('holding');
+      delete holdTimers[id];
+      deleteCooldown(id);
+    }, 3000);
+  }
+
+  function cancelHoldDelete(e, id) {
+    const btn = e.currentTarget;
+    if (btn) btn.classList.remove('holding');
+    if (holdTimers[id]) {
+      clearTimeout(holdTimers[id]);
+      delete holdTimers[id];
+    }
+  }
+
+  /* GERENCIADOR DO POPUP/MODAL CUSTOMIZADO */
+  function showCustomModal({ title = 'Aviso', message = '', icon = '⚠️', confirmText = 'Confirmar', cancelText = 'Cancelar', isDanger = false, alertOnly = false }) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('customModal');
+      const titleEl = document.getElementById('modalTitle');
+      const iconEl = document.getElementById('modalIcon');
+      const bodyEl = document.getElementById('modalMessage');
+      const confirmBtn = document.getElementById('modalBtnConfirm');
+      const cancelBtn = document.getElementById('modalBtnCancel');
+
+      titleEl.textContent = title;
+      iconEl.textContent = icon;
+      bodyEl.innerHTML = message;
+
+      confirmBtn.textContent = confirmText;
+      confirmBtn.className = isDanger ? 'btn-modal btn-modal-danger' : 'btn-modal btn-modal-confirm';
+
+      if (alertOnly) {
+        cancelBtn.style.display = 'none';
       } else {
-        saveAndRender();
-      }
-      document.getElementById('deletePopover').classList.remove('active');
-    }
-
-    async function clearAllCooldowns() {
-      if (activeCooldowns.length === 0) {
-        await showCustomModal({
-          title: 'Aviso',
-          icon: 'ℹ️',
-          message: 'Nenhum cooldown ativo para remover.',
-          alertOnly: true,
-          confirmText: 'Entendido'
-        });
-        document.getElementById('deletePopover').classList.remove('active');
-        return;
+        cancelBtn.style.display = 'block';
+        cancelBtn.textContent = cancelText;
       }
 
-      const confirmDelete = await showCustomModal({
-        title: 'Limpar Todos os Cooldowns',
-        icon: '🗑️',
-        message: 'Tem certeza que deseja remover <strong>TODOS</strong> os cooldowns da lista?',
-        confirmText: 'Sim, Remover Todos',
-        cancelText: 'Cancelar',
-        isDanger: true
-      });
-
-      if (confirmDelete) {
-        activeCooldowns = [];
-        saveAndRender();
-      }
-      document.getElementById('deletePopover').classList.remove('active');
-    }
-
-    function changeVolume(value) {
-      soundVolume = value / 100;
-      localStorage.setItem('cooldown_sound_volume', soundVolume);
-      const volLabel = document.getElementById('volumeValue');
-      if (volLabel) volLabel.textContent = `${value}%`;
-    }
-
-    function selectType(type) {
-      selectedVehicle = type;
-      document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
-
-      if (type === 'Helicóptero') document.getElementById('btnHeli').classList.add('active');
-      if (type === 'Tank') document.getElementById('btnTank').classList.add('active');
-      if (type === 'Invasão') document.getElementById('btnInvasao').classList.add('active');
-
-      renderActionButtons();
-    }
-
-    function setControlMode(mode) {
-      controlMode = mode;
-      localStorage.setItem('cooldown_control_mode', mode);
-
-      document.getElementById('modeBtnAllButtons').classList.toggle('active', mode === 'individual');
-      document.getElementById('modeBtnSingleButton').classList.toggle('active', mode === 'single');
-
-      renderActionButtons();
-    }
-
-    function toggleCompactMode() {
-      compactMode = !compactMode;
-      localStorage.setItem('cooldown_compact_mode', JSON.stringify(compactMode));
-      applyCompactUI();
-    }
-
-    function applyCompactUI() {
-      document.body.classList.toggle('compact-mode', compactMode);
-      const btn = document.getElementById('btnCompact');
-      const status = document.getElementById('compactStatusText');
-      if (btn && status) {
-        btn.classList.toggle('compact-active', compactMode);
-        status.textContent = compactMode ? 'ON' : 'OFF';
-      }
-    }
-
-    /* ALTERAÇÃO DE NÍVEL VIP */
-    function changeVipTier(tier) {
-      selectedVipTier = tier;
-      localStorage.setItem('cooldown_vip_tier_v4', selectedVipTier);
-      renderConfigGrid();
-      renderActionButtons();
-    }
-
-    function applyVipUI() {
-      const select = document.getElementById('vipTierSelect');
-      if (select) {
-        select.value = selectedVipTier;
-      }
-    }
-
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      if (!soundEnabled) {
-        audioQueue = [];
-      }
-      localStorage.setItem('cooldown_sound_enabled', JSON.stringify(soundEnabled));
-      applySoundUI();
-    }
-
-    function applySoundUI() {
-      const btn = document.getElementById('btnSound');
-      const status = document.getElementById('soundStatusText');
-      if (btn && status) {
-        btn.classList.toggle('sound-active', soundEnabled);
-        status.textContent = soundEnabled ? 'ON' : 'OFF';
-      }
-    }
-
-    function renderActionButtons() {
-      const container = document.getElementById('actionButtonsContainer');
-      if (!container) return;
-
-      if (selectedVehicle === 'Invasão') {
-        container.innerHTML = `
-          <button class="btn-start-all-master invasao" onclick="startCooldown('Invasão', 'Invasão', 'invasao')">
-            ⚔️ Iniciar Cooldown de Invasão
-            <small>Duração: ${getFormattedDuration('invasao')}</small>
-          </button>
-        `;
-        return;
-      }
-
-      if (controlMode === 'single') {
-        const key = selectedVehicle.toLowerCase() === 'helicóptero' ? 'helicoptero' : 'tank';
-        container.innerHTML = `
-          <button class="btn-start-all-master" onclick="startCooldown('${selectedVehicle}', '${selectedVehicle}', '${key}')">
-            🚀 Iniciar Cooldown (${selectedVehicle})
-            <small>Duração: ${getFormattedDuration(key)}</small>
-          </button>
-        `;
-        return;
-      }
-
-      let html = '<div class="button-grid">';
-      const filteredRarities = rarities.filter(r => !r.heliOnly || selectedVehicle === 'Helicóptero');
-
-      filteredRarities.forEach(r => {
-        const dur = getFormattedDuration(r.key);
-        html += `
-          <button class="btn-rarity ${r.key}" onclick="startCooldown('${selectedVehicle}', '${r.name}', '${r.key}')">
-            <span>${r.name}</span>
-            <small>${dur}</small>
-          </button>
-        `;
-      });
-
-      html += `
-        <button class="btn-all-shortcut" onclick="startAllForSelected()">
-          ⚡ Iniciar Todos para ${selectedVehicle}
-        </button>
-      </div>`;
-
-      container.innerHTML = html;
-    }
-
-    function getFormattedDuration(key) {
-      const tier = selectedVipTier || 'none';
-      const t = (savedTimes[key] && savedTimes[key][tier]) || { h: 1, m: 0 };
-      return `${t.h > 0 ? t.h + 'h ' : ''}${t.m}m`;
-    }
-
-    function getVipBadgeLabel(tier) {
-      switch (tier) {
-        case 'tier1': return 'VIP T1';
-        case 'tier2': return 'VIP T2';
-        case 'tier3': return 'VIP T3';
-        case 'el_patron': return 'EL PATRON';
-        default: return '';
-      }
-    }
-
-    async function startCooldown(vehicleName, rarityName, key) {
-      await unlockAudio();
-	  const id = `${vehicleName}-${rarityName}`;
-      const existingIdx = activeCooldowns.findIndex(c => c.id === id);
-      const now = Date.now();
-
-      if (existingIdx >= 0 && activeCooldowns[existingIdx].endTime > now) {
-        const confirmRestart = await showCustomModal({
-          title: 'Cooldown em Andamento',
-          icon: '⏱️',
-          message: `O Cooldown de <strong>${vehicleName} (${rarityName})</strong> já está ativo!<br><br>Deseja reiniciar este tempo do zero ou continuar com o contador atual?`,
-          confirmText: '🔄 Reiniciar do Zero',
-          cancelText: '▶️ Manter Atual'
-        });
-        
-        if (!confirmRestart) {
-          return;
-        }
-      }
-
-      const timeObj = (savedTimes[key] && savedTimes[key][selectedVipTier]) || { h: 1, m: 0 };
-      const totalSeconds = (timeObj.h * 3600) + (timeObj.m * 60);
-      const endTime = now + (totalSeconds * 1000);
-
-      const newItem = {
-        id: id,
-        vehicle: vehicleName,
-        rarity: rarityName,
-        key: key,
-        vipTier: selectedVipTier,
-        startTime: now,
-        endTime: endTime,
-        duration: totalSeconds,
-        alerted: false,
-        lastReminderTime: null
+      const cleanup = () => {
+        overlay.classList.remove('active');
+        confirmBtn.removeEventListener('click', onConfirm);
+        cancelBtn.removeEventListener('click', onCancel);
       };
 
-      if (existingIdx >= 0) {
-        activeCooldowns[existingIdx] = newItem;
-      } else {
-        activeCooldowns.push(newItem);
-      }
+      const onConfirm = () => { cleanup(); resolve(true); };
+      const onCancel = () => { cleanup(); resolve(false); };
 
-      saveAndRender();
+      confirmBtn.addEventListener('click', onConfirm);
+      cancelBtn.addEventListener('click', onCancel);
+
+      overlay.classList.add('active');
+    });
+  }
+
+  /* GERENCIAMENTO DE ÁUDIO EM FILA */
+  function getAudioPath(vehicle) {
+    const v = (vehicle || '').toLowerCase();
+    if (v.includes('farm')) return 'alerta.mp3';
+    if (v.includes('heli')) return 'Som/avisos/Heli.mp3';
+    if (v.includes('tank')) return 'Som/avisos/Tank.mp3';
+    if (v.includes('invasa') || v.includes('invasão') || v.includes('raid')) return 'Som/avisos/Invasao.mp3';
+    return 'alerta.mp3';
+  }
+
+  function playAudioFile(filePath) {
+    if (!soundEnabled) return;
+    audioQueue.push(filePath);
+    if (!isPlayingAudio) {
+      processAudioQueue();
+    }
+  }
+
+  function processAudioQueue() {
+    if (audioQueue.length === 0 || !soundEnabled) {
+      isPlayingAudio = false;
+      currentAudio = null;
+      return;
     }
 
-    function startAllForSelected() {
-      const filteredRarities = rarities.filter(r => !r.heliOnly || selectedVehicle === 'Helicóptero');
-      filteredRarities.forEach(r => {
-        startCooldown(selectedVehicle, r.name, r.key);
+    isPlayingAudio = true;
+    const nextFile = audioQueue.shift();
+
+    try {
+      currentAudio = new Audio(nextFile);
+      currentAudio.volume = soundVolume;
+
+      const handleEnded = () => {
+        currentAudio = null;
+        setTimeout(() => {
+          processAudioQueue();
+        }, 2000);
+      };
+
+      currentAudio.onended = handleEnded;
+      
+      currentAudio.onerror = (e) => {
+        console.log('Erro ao carregar MP3:', e);
+        handleEnded();
+      };
+
+      currentAudio.play().catch(e => {
+        console.log('Erro de reprodução MP3:', e);
+        handleEnded();
       });
+
+    } catch (e) {
+      console.log('Erro no sistema de som:', e);
+      isPlayingAudio = false;
+      currentAudio = null;
+    }
+  }
+
+  function playAlarmSound(vehicle) {
+    if (!soundEnabled) return;
+    const path = getAudioPath(vehicle);
+    playAudioFile(path);
+  }
+
+  /* MENSAGEM DISCRETA NA TELA */
+  function showDiscreetMessage(msg) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'discreet-toast';
+    toast.innerHTML = `🔔 <span>${msg}</span>`;
+    container.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  /* ESTATÍSTICAS E HISTÓRICO */
+  function getStats() {
+    const defaultStats = { total: 0, today: 0, lastDate: '', history: [] };
+    return JSON.parse(localStorage.getItem(STATS_KEY)) || defaultStats;
+  }
+
+  function registerReset(itemName, rarityName) {
+    const stats = getStats();
+    const today = new Date().toLocaleDateString('pt-BR');
+
+    if (stats.lastDate !== today) {
+      stats.today = 0;
+      stats.lastDate = today;
     }
 
-    function deleteCooldown(id) {
-      if (holdTimers[id]) {
-        clearTimeout(holdTimers[id]);
-        delete holdTimers[id];
+    stats.total++;
+    stats.today++;
+
+    const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    if (!stats.history) stats.history = [];
+
+    stats.history.unshift({
+      item: itemName,
+      rarity: rarityName,
+      time: `${today} às ${timeString}`
+    });
+
+    if (stats.history.length > 20) {
+      stats.history.pop();
+    }
+
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    renderStatsUI();
+  }
+
+  /* APAGAR HISTÓRICO DE REGISTROS */
+  async function clearHistory() {
+    const stats = getStats();
+    if (!stats.history || stats.history.length === 0) {
+      await showCustomModal({
+        title: 'Aviso',
+        icon: 'ℹ️',
+        message: 'Não há registros no histórico para limpar no momento.',
+        alertOnly: true,
+        confirmText: 'Entendido'
+      });
+      return;
+    }
+
+    const confirmClear = await showCustomModal({
+      title: 'Limpar Histórico',
+      icon: '🗑️',
+      message: 'Tem certeza que deseja apagar todo o **histórico de registros** e zerar os contadores?',
+      confirmText: 'Sim, Apagar Registro',
+      cancelText: 'Cancelar',
+      isDanger: true
+    });
+
+    if (confirmClear) {
+      const resetStats = { total: 0, today: 0, lastDate: '', history: [] };
+      localStorage.setItem(STATS_KEY, JSON.stringify(resetStats));
+      renderStatsUI();
+    }
+  }
+
+  function renderStatsUI() {
+    const stats = getStats();
+
+    const totalEl = document.getElementById('statTotal');
+    const todayEl = document.getElementById('statToday');
+    const historyList = document.getElementById('historyList');
+
+    if (totalEl) totalEl.textContent = stats.total;
+    if (todayEl) todayEl.textContent = stats.today;
+
+    if (historyList) {
+      if (!stats.history || stats.history.length === 0) {
+        historyList.innerHTML = '<li class="empty-msg" style="font-size: 0.8rem;">Nenhum reset registrado.</li>';
+      } else {
+        historyList.innerHTML = stats.history.map(entry => `
+          <li class="history-item">
+            <div class="history-item-info">
+              <strong>${entry.item}</strong> 
+              <span class="history-badge">${entry.rarity}</span>
+            </div>
+            <small>${entry.time}</small>
+          </li>
+        `).join('');
       }
-      activeCooldowns = activeCooldowns.filter(c => c.id !== id);
+    }
+  }
+
+  function toggleSettingsPopover(e) {
+    e.stopPropagation();
+    const popover = document.getElementById('settingsPopover');
+    document.getElementById('deletePopover').classList.remove('active');
+    popover.classList.toggle('active');
+  }
+
+  function toggleDeletePopover(e) {
+    e.stopPropagation();
+    const popover = document.getElementById('deletePopover');
+    document.getElementById('settingsPopover').classList.remove('active');
+    popover.classList.toggle('active');
+  }
+
+  window.addEventListener('click', (e) => {
+    const setPopover = document.getElementById('settingsPopover');
+    const btnGear = document.getElementById('btnGear');
+    if (setPopover && setPopover.classList.contains('active') && !setPopover.contains(e.target) && !btnGear.contains(e.target)) {
+      setPopover.classList.remove('active');
+    }
+
+    const delPopover = document.getElementById('deletePopover');
+    const btnDeleteGear = document.getElementById('btnDeleteGear');
+    if (delPopover && delPopover.classList.contains('active') && !delPopover.contains(e.target) && !btnDeleteGear.contains(e.target)) {
+      delPopover.classList.remove('active');
+    }
+  });
+
+  async function clearReadyCooldowns() {
+    const now = Date.now();
+    const initialCount = activeCooldowns.length;
+    activeCooldowns = activeCooldowns.filter(item => item.endTime > now);
+    
+    if (activeCooldowns.length === initialCount) {
+      await showCustomModal({
+        title: 'Aviso',
+        icon: 'ℹ️',
+        message: 'Nenhum cooldown concluído para remover no momento.',
+        alertOnly: true,
+        confirmText: 'Entendido'
+      });
+    } else {
       saveAndRender();
     }
+    document.getElementById('deletePopover').classList.remove('active');
+  }
 
-    function renderConfigGrid() {
-      const grid = document.getElementById('configGrid');
-      if (!grid) return;
+  async function clearAllCooldowns() {
+    if (activeCooldowns.length === 0) {
+      await showCustomModal({
+        title: 'Aviso',
+        icon: 'ℹ️',
+        message: 'Nenhum cooldown ativo para remover.',
+        alertOnly: true,
+        confirmText: 'Entendido'
+      });
+      document.getElementById('deletePopover').classList.remove('active');
+      return;
+    }
 
-      const items = [
-        { name: 'Invasão (Geral 30m)', key: 'invasao' },
-        { name: 'Helicóptero (Padrão)', key: 'helicoptero' },
-        { name: 'Tank (Padrão)', key: 'tank' },
-        ...rarities
-      ];
+    const confirmDelete = await showCustomModal({
+      title: 'Limpar Todos os Cooldowns',
+      icon: '🗑️',
+      message: 'Tem certeza que deseja remover <strong>TODOS</strong> os cooldowns da lista?',
+      confirmText: 'Sim, Remover Todos',
+      cancelText: 'Cancelar',
+      isDanger: true
+    });
 
-      const tiersConfig = [
-        { id: 'none', label: 'Normal' },
-        { id: 'tier1', label: 'Tier 1' },
-        { id: 'tier2', label: 'Tier 2' },
-        { id: 'tier3', label: 'Tier 3' },
-        { id: 'el_patron', label: 'El Patron' }
-      ];
+    if (confirmDelete) {
+      activeCooldowns = [];
+      saveAndRender();
+    }
+    document.getElementById('deletePopover').classList.remove('active');
+  }
 
-      grid.innerHTML = items.map(item => {
-        const key = item.key;
-        const timeData = savedTimes[key] || {};
+  function changeVolume(value) {
+    soundVolume = value / 100;
+    localStorage.setItem('cooldown_sound_volume', soundVolume);
+    const volLabel = document.getElementById('volumeValue');
+    if (volLabel) volLabel.textContent = `${value}%`;
+  }
 
-        let rowsHtml = tiersConfig.map(tier => {
-          const t = timeData[tier.id] || { h: 0, m: 0 };
-          const isVipTier = tier.id !== 'none';
-          const style = isVipTier ? 'color: var(--vip-gold);' : '';
+  function selectType(type) {
+    selectedVehicle = type;
+    document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
 
-          return `
-            <div class="config-row" style="${style}">
-              <span>${tier.label}:</span>
-              <div class="config-inputs">
-                <input type="number" min="0" max="24" value="${t.h}" onchange="updateConfigTime('${key}', '${tier.id}', 'h', this.value)"> h
-                <input type="number" min="0" max="59" value="${t.m}" onchange="updateConfigTime('${key}', '${tier.id}', 'm', this.value)"> m
-              </div>
-            </div>
-          `;
-        }).join('');
+    if (type === 'Helicóptero') document.getElementById('btnHeli').classList.add('active');
+    if (type === 'Tank') document.getElementById('btnTank').classList.add('active');
+    if (type === 'Invasão') document.getElementById('btnInvasao').classList.add('active');
+    if (type === 'Farm') document.getElementById('btnFarm').classList.add('active');
+
+    const farmCard = document.getElementById('farmCardSection');
+    if (farmCard) {
+      farmCard.style.display = (type === 'Farm') ? 'block' : 'none';
+    }
+
+    renderActionButtons();
+
+    if (type === 'Farm' && farmCard) {
+      farmCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  function setControlMode(mode) {
+    controlMode = mode;
+    localStorage.setItem('cooldown_control_mode', mode);
+
+    document.getElementById('modeBtnAllButtons').classList.toggle('active', mode === 'individual');
+    document.getElementById('modeBtnSingleButton').classList.toggle('active', mode === 'single');
+
+    renderActionButtons();
+  }
+
+  function toggleCompactMode() {
+    compactMode = !compactMode;
+    localStorage.setItem('cooldown_compact_mode', JSON.stringify(compactMode));
+    applyCompactUI();
+  }
+
+  function applyCompactUI() {
+    document.body.classList.toggle('compact-mode', compactMode);
+    const btn = document.getElementById('btnCompact');
+    const status = document.getElementById('compactStatusText');
+    if (btn && status) {
+      btn.classList.toggle('compact-active', compactMode);
+      status.textContent = compactMode ? 'ON' : 'OFF';
+    }
+  }
+
+  function changeVipTier(tier) {
+    selectedVipTier = tier;
+    localStorage.setItem('cooldown_vip_tier_v4', selectedVipTier);
+    renderConfigGrid();
+    renderActionButtons();
+  }
+
+  function applyVipUI() {
+    const select = document.getElementById('vipTierSelect');
+    if (select) {
+      select.value = selectedVipTier;
+    }
+  }
+
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    if (!soundEnabled) {
+      stopAudio();
+    }
+    localStorage.setItem('cooldown_sound_enabled', JSON.stringify(soundEnabled));
+    applySoundUI();
+  }
+
+  function applySoundUI() {
+    const btn = document.getElementById('btnSound');
+    const status = document.getElementById('soundStatusText');
+    if (btn && status) {
+      btn.classList.toggle('sound-active', soundEnabled);
+      status.textContent = soundEnabled ? 'ON' : 'OFF';
+    }
+  }
+
+  function renderActionButtons() {
+    const container = document.getElementById('actionButtonsContainer');
+    const modeContainer = document.getElementById('modeSelectorContainer');
+    if (!container) return;
+
+    /* OCULTA O SELETOR DE MODO SE FOR FARM OU INVASÃO */
+    if (modeContainer) {
+      modeContainer.style.display = (selectedVehicle === 'Farm' || selectedVehicle === 'Invasão') ? 'none' : 'flex';
+    }
+
+    if (selectedVehicle === 'Farm') {
+      container.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 12px; align-items: center; background: #0f1117; padding: 16px; border-radius: 10px; border: 1px solid var(--border);">
+          <div style="font-weight: bold; color: var(--vip-gold); font-size: 0.95rem;">🌾 Modos de Farm Disponíveis:</div>
+          <div class="mode-selector" style="margin-bottom:0; width: 100%; max-width: 400px;">
+            <button class="mode-btn ${farmMode === 'timer' ? 'active' : ''}" onclick="setFarmMode('timer')">⏳ Temporizador</button>
+            <button class="mode-btn ${farmMode === 'stopwatch' ? 'active' : ''}" onclick="setFarmMode('stopwatch')">⏱️ Cronômetro</button>
+          </div>
+          <small style="color: var(--text-muted); text-align: center;">Acesse as configurações do Farm no painel de controle abaixo.</small>
+        </div>
+      `;
+      return;
+    }
+
+    if (selectedVehicle === 'Invasão') {
+      container.innerHTML = `
+        <button class="btn-start-all-master invasao" onclick="startCooldown('Invasão', 'Invasão', 'invasao')">
+          ⚔️ Iniciar Cooldown de Invasão
+          <small>Duração: ${getFormattedDuration('invasao')}</small>
+        </button>
+      `;
+      return;
+    }
+
+    if (controlMode === 'single') {
+      const key = selectedVehicle.toLowerCase() === 'helicóptero' ? 'helicoptero' : 'tank';
+      container.innerHTML = `
+        <button class="btn-start-all-master" onclick="startCooldown('${selectedVehicle}', '${selectedVehicle}', '${key}')">
+          🚀 Iniciar Cooldown (${selectedVehicle})
+          <small>Duração: ${getFormattedDuration(key)}</small>
+        </button>
+      `;
+      return;
+    }
+
+    let html = '<div class="button-grid">';
+    const filteredRarities = rarities.filter(r => !r.heliOnly || selectedVehicle === 'Helicóptero');
+
+    filteredRarities.forEach(r => {
+      const dur = getFormattedDuration(r.key);
+      html += `
+        <button class="btn-rarity ${r.key}" onclick="startCooldown('${selectedVehicle}', '${r.name}', '${r.key}')">
+          <span>${r.name}</span>
+          <small>${dur}</small>
+        </button>
+      `;
+    });
+
+    html += `</div>`;
+
+    container.innerHTML = html;
+  }
+
+  function getFormattedDuration(key) {
+    const tier = selectedVipTier || 'none';
+    const t = (savedTimes[key] && savedTimes[key][tier]) || { h: 1, m: 0 };
+    return `${t.h > 0 ? t.h + 'h ' : ''}${t.m}m`;
+  }
+
+  function getVipBadgeLabel(tier) {
+    switch (tier) {
+      case 'tier1': return 'VIP T1';
+      case 'tier2': return 'VIP T2';
+      case 'tier3': return 'VIP T3';
+      case 'el_patron': return 'EL PATRON';
+      default: return '';
+    }
+  }
+
+  async function startCooldown(vehicleName, rarityName, key) {
+    await unlockAudio();
+    const id = `${vehicleName}-${rarityName}`;
+    const existingIdx = activeCooldowns.findIndex(c => c.id === id);
+    const now = Date.now();
+
+    if (existingIdx >= 0 && activeCooldowns[existingIdx].endTime > now) {
+      const confirmRestart = await showCustomModal({
+        title: 'Cooldown em Andamento',
+        icon: '⏱️',
+        message: `O Cooldown de <strong>${vehicleName} (${rarityName})</strong> já está ativo!<br><br>Deseja reiniciar este tempo do zero ou continuar com o contador atual?`,
+        confirmText: '🔄 Reiniciar do Zero',
+        cancelText: '▶️ Manter Atual'
+      });
+      
+      if (!confirmRestart) {
+        return;
+      }
+    }
+
+    const timeObj = (savedTimes[key] && savedTimes[key][selectedVipTier]) || { h: 1, m: 0 };
+    const totalSeconds = (timeObj.h * 3600) + (timeObj.m * 60);
+    const endTime = now + (totalSeconds * 1000);
+
+    const newItem = {
+      id: id,
+      vehicle: vehicleName,
+      rarity: rarityName,
+      key: key,
+      vipTier: selectedVipTier,
+      startTime: now,
+      endTime: endTime,
+      duration: totalSeconds,
+      alerted: false,
+      lastReminderTime: null
+    };
+
+    if (existingIdx >= 0) {
+      activeCooldowns[existingIdx] = newItem;
+    } else {
+      activeCooldowns.push(newItem);
+    }
+
+    saveAndRender();
+  }
+
+  function deleteCooldown(id) {
+    if (holdTimers[id]) {
+      clearTimeout(holdTimers[id]);
+      delete holdTimers[id];
+    }
+    activeCooldowns = activeCooldowns.filter(c => c.id !== id);
+    saveAndRender();
+  }
+
+  /* LÓGICA DO TEMPORIZADOR E CRONÔMETRO DE FARM */
+  function setFarmMode(mode) {
+    farmMode = mode;
+    localStorage.setItem('farm_mode', mode);
+
+    const tSec = document.getElementById('farmTimerSection');
+    const sSec = document.getElementById('farmStopwatchSection');
+    if (tSec) tSec.style.display = mode === 'timer' ? 'flex' : 'none';
+    if (sSec) sSec.style.display = mode === 'stopwatch' ? 'flex' : 'none';
+
+    if (selectedVehicle === 'Farm') {
+      renderActionButtons();
+    }
+  }
+
+  function getFarmInputDurationMs() {
+    const h = Math.max(0, parseInt(document.getElementById('farmHours')?.value, 10) || 0);
+    const m = Math.max(0, Math.min(59, parseInt(document.getElementById('farmMinutes')?.value, 10) || 0));
+    const s = Math.max(0, Math.min(59, parseInt(document.getElementById('farmSeconds')?.value, 10) || 0));
+    const totalMs = ((h * 3600) + (m * 60) + s) * 1000;
+    return { h, m, s, ms: totalMs };
+  }
+
+  function updateFarmTimerInputs() {
+    if (!farmTimerState.isRunning) {
+      const dur = getFarmInputDurationMs();
+      farmTimerState.h = dur.h;
+      farmTimerState.m = dur.m;
+      farmTimerState.s = dur.s;
+      farmTimerState.remainingMs = dur.ms;
+      farmTimerState.alerted = false;
+      saveFarmTimerState();
+      renderFarmTimerDisplay();
+    }
+  }
+
+  function startFarmTimer() {
+    unlockAudio();
+    const now = Date.now();
+
+    if (!farmTimerState.isRunning) {
+      if (farmTimerState.remainingMs <= 0 || farmTimerState.alerted) {
+        const dur = getFarmInputDurationMs();
+        farmTimerState.remainingMs = dur.ms;
+        farmTimerState.alerted = false;
+      }
+      farmTimerState.endTime = now + farmTimerState.remainingMs;
+      farmTimerState.isRunning = true;
+      saveFarmTimerState();
+      updateFarmUI();
+    }
+  }
+
+  function pauseFarmTimer() {
+    if (farmTimerState.isRunning) {
+      const now = Date.now();
+      farmTimerState.remainingMs = Math.max(0, farmTimerState.endTime - now);
+      farmTimerState.isRunning = false;
+      saveFarmTimerState();
+      updateFarmUI();
+    }
+  }
+
+  /* REINICIAR TEMPORIZADOR: PARA QUALQUER ÁUDIO EM EXECUÇÃO */
+  function resetFarmTimer() {
+    stopAudio();
+    const dur = getFarmInputDurationMs();
+    farmTimerState.h = dur.h;
+    farmTimerState.m = dur.m;
+    farmTimerState.s = dur.s;
+    farmTimerState.remainingMs = dur.ms;
+    farmTimerState.endTime = null;
+    farmTimerState.isRunning = false;
+    farmTimerState.alerted = false;
+    saveFarmTimerState();
+    updateFarmUI();
+  }
+
+  function saveFarmTimerState() {
+    localStorage.setItem('farm_timer_state_v3', JSON.stringify(farmTimerState));
+  }
+
+  function renderFarmTimerDisplay() {
+    const display = document.getElementById('farmTimerDisplay');
+    const startBtn = document.getElementById('btnFarmTimerStart');
+    const pauseBtn = document.getElementById('btnFarmTimerPause');
+
+    if (!display) return;
+
+    if (farmTimerState.remainingMs <= 0) {
+      display.textContent = "FARM CONCLUÍDO!";
+      display.style.color = "#10b981";
+    } else {
+      display.textContent = formatTime(farmTimerState.remainingMs);
+      display.style.color = "var(--vip-gold)";
+    }
+
+    if (startBtn) {
+      startBtn.disabled = farmTimerState.isRunning;
+      const totalMs = ((farmTimerState.h * 3600) + (farmTimerState.m * 60) + farmTimerState.s) * 1000;
+      if (!farmTimerState.isRunning && farmTimerState.remainingMs > 0 && farmTimerState.remainingMs < totalMs) {
+        startBtn.innerHTML = '▶️ Continuar';
+      } else {
+        startBtn.innerHTML = '▶️ Iniciar';
+      }
+    }
+
+    if (pauseBtn) {
+      pauseBtn.disabled = !farmTimerState.isRunning;
+    }
+  }
+
+  /* CRONÔMETRO DE FARM (SEM ÁUDIO) */
+  function startFarmStopwatch() {
+    unlockAudio();
+    if (!farmStopwatchState.isRunning) {
+      const now = Date.now();
+      farmStopwatchState.startTime = now - farmStopwatchState.elapsedMs;
+      farmStopwatchState.isRunning = true;
+      saveFarmStopwatchState();
+      updateFarmUI();
+    }
+  }
+
+  function pauseFarmStopwatch() {
+    if (farmStopwatchState.isRunning) {
+      const now = Date.now();
+      farmStopwatchState.elapsedMs = now - farmStopwatchState.startTime;
+      farmStopwatchState.isRunning = false;
+      saveFarmStopwatchState();
+      updateFarmUI();
+      
+      showDiscreetMessage("🌾 Cronômetro de Farm pausado/finalizado!");
+      registerReset('Farm', 'Cronômetro');
+    }
+  }
+
+  function resetFarmStopwatch() {
+    farmStopwatchState.elapsedMs = 0;
+    farmStopwatchState.startTime = null;
+    farmStopwatchState.isRunning = false;
+    saveFarmStopwatchState();
+    updateFarmUI();
+  }
+
+  function saveFarmStopwatchState() {
+    localStorage.setItem('farm_stopwatch_state', JSON.stringify(farmStopwatchState));
+  }
+
+  function renderFarmStopwatchDisplay() {
+    const display = document.getElementById('farmStopwatchDisplay');
+    const startBtn = document.getElementById('btnFarmStopwatchStart');
+    const pauseBtn = document.getElementById('btnFarmStopwatchPause');
+
+    if (!display) return;
+
+    display.textContent = formatTime(farmStopwatchState.elapsedMs);
+
+    if (startBtn) {
+      startBtn.disabled = farmStopwatchState.isRunning;
+      if (!farmStopwatchState.isRunning && farmStopwatchState.elapsedMs > 0) {
+        startBtn.innerHTML = '▶️ Continuar';
+      } else {
+        startBtn.innerHTML = '▶️ Iniciar Farm';
+      }
+    }
+
+    if (pauseBtn) {
+      pauseBtn.disabled = !farmStopwatchState.isRunning;
+    }
+  }
+
+  function updateFarmUI() {
+    const now = Date.now();
+
+    /* Atualizar Temporizador de Farm */
+    if (farmTimerState.isRunning) {
+      farmTimerState.remainingMs = farmTimerState.endTime - now;
+      if (farmTimerState.remainingMs <= 0) {
+        farmTimerState.remainingMs = 0;
+        farmTimerState.isRunning = false;
+
+        if (!farmTimerState.alerted) {
+          farmTimerState.alerted = true;
+          showDiscreetMessage("🌾 Temporizador de Farm concluído!");
+          playAlarmSound('Farm');
+          registerReset('Farm', 'Temporizador');
+        }
+        saveFarmTimerState();
+      }
+    }
+    renderFarmTimerDisplay();
+
+    /* Atualizar Cronômetro de Farm */
+    if (farmStopwatchState.isRunning) {
+      farmStopwatchState.elapsedMs = now - farmStopwatchState.startTime;
+    }
+    renderFarmStopwatchDisplay();
+  }
+
+  function renderConfigGrid() {
+    const grid = document.getElementById('configGrid');
+    if (!grid) return;
+
+    const items = [
+      { name: 'Invasão (Geral 30m)', key: 'invasao' },
+      { name: 'Helicóptero (Padrão)', key: 'helicoptero' },
+      { name: 'Tank (Padrão)', key: 'tank' },
+      ...rarities
+    ];
+
+    const tiersConfig = [
+      { id: 'none', label: 'Normal' },
+      { id: 'tier1', label: 'Tier 1' },
+      { id: 'tier2', label: 'Tier 2' },
+      { id: 'tier3', label: 'Tier 3' },
+      { id: 'el_patron', label: 'El Patron' }
+    ];
+
+    grid.innerHTML = items.map(item => {
+      const key = item.key;
+      const timeData = savedTimes[key] || {};
+
+      let rowsHtml = tiersConfig.map(tier => {
+        const t = timeData[tier.id] || { h: 0, m: 0 };
+        const isVipTier = tier.id !== 'none';
+        const style = isVipTier ? 'color: var(--vip-gold);' : '';
 
         return `
-          <div class="config-item">
-            <strong style="font-size:0.85rem; color:#fff;">${item.name}</strong>
-            ${rowsHtml}
+          <div class="config-row" style="${style}">
+            <span>${tier.label}:</span>
+            <div class="config-inputs">
+              <input type="number" min="0" max="24" value="${t.h}" onchange="updateConfigTime('${key}', '${tier.id}', 'h', this.value)"> h
+              <input type="number" min="0" max="59" value="${t.m}" onchange="updateConfigTime('${key}', '${tier.id}', 'm', this.value)"> m
+            </div>
           </div>
         `;
       }).join('');
+
+      return `
+        <div class="config-item">
+          <strong style="font-size:0.85rem; color:#fff;">${item.name}</strong>
+          ${rowsHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function updateConfigTime(key, tier, field, value) {
+    if (!savedTimes[key]) savedTimes[key] = {};
+    if (!savedTimes[key][tier]) savedTimes[key][tier] = { h: 0, m: 0 };
+
+    savedTimes[key][tier][field] = parseInt(value, 10) || 0;
+    localStorage.setItem('cooldown_durations_v4', JSON.stringify(savedTimes));
+    renderActionButtons();
+  }
+
+  function saveAndRender() {
+    localStorage.setItem('cooldown_actives', JSON.stringify(activeCooldowns));
+    updateTimers();
+  }
+
+  function updateTimers() {
+    updateFarmUI();
+
+    const container = document.getElementById('timerList');
+    const now = Date.now();
+
+    if (!container) return;
+
+    if (activeCooldowns.length === 0) {
+      container.innerHTML = '<p class="empty-msg">Nenhum cooldown rodando no momento.</p>';
+      updateSidebarSummary();
+      return;
     }
 
-    function updateConfigTime(key, tier, field, value) {
-      if (!savedTimes[key]) savedTimes[key] = {};
-      if (!savedTimes[key][tier]) savedTimes[key][tier] = { h: 0, m: 0 };
-
-      savedTimes[key][tier][field] = parseInt(value, 10) || 0;
-      localStorage.setItem('cooldown_durations_v4', JSON.stringify(savedTimes));
-      renderActionButtons();
+    if (Object.keys(holdTimers).length > 0) {
+      updateSidebarSummary();
+      return;
     }
 
-    function saveAndRender() {
-      localStorage.setItem('cooldown_actives', JSON.stringify(activeCooldowns));
-      updateTimers();
-    }
+    activeCooldowns.sort((a, b) => a.endTime - b.endTime);
 
-    function updateTimers() {
-      const container = document.getElementById('timerList');
-      const now = Date.now();
+    let html = '';
 
-      if (!container) return;
+    activeCooldowns.forEach(c => {
+      const remainingMs = c.endTime - now;
+      const isReady = remainingMs <= 0;
 
-      if (activeCooldowns.length === 0) {
-        container.innerHTML = '<p class="empty-msg">Nenhum cooldown rodando no momento.</p>';
-        updateSidebarSummary();
-        return;
-      }
-
-      if (Object.keys(holdTimers).length > 0) {
-        updateSidebarSummary();
-        return;
-      }
-
-      activeCooldowns.sort((a, b) => a.endTime - b.endTime);
-
-      let html = '';
-
-      activeCooldowns.forEach(c => {
-        const remainingMs = c.endTime - now;
-        const isReady = remainingMs <= 0;
-
-        if (isReady && !c.alerted) {
-          c.alerted = true;
+      if (isReady && !c.alerted) {
+        c.alerted = true;
+        c.lastReminderTime = Date.now();
+        
+        localStorage.setItem('cooldown_actives', JSON.stringify(activeCooldowns));
+        
+        showDiscreetMessage(`${c.vehicle} ${c.rarity} concluído!`);
+        playAlarmSound(c.vehicle);
+        registerReset(c.vehicle, c.rarity);
+        
+      } else if (isReady && c.alerted) {
+        if (!c.lastReminderTime) {
           c.lastReminderTime = Date.now();
-          
+        }
+        
+        if (Date.now() - c.lastReminderTime >= 120000) {
+          c.lastReminderTime = Date.now();
           localStorage.setItem('cooldown_actives', JSON.stringify(activeCooldowns));
           
-          showDiscreetMessage(`${c.vehicle} ${c.rarity} concluído!`);
+          showDiscreetMessage(`Lembrete: ${c.vehicle} ${c.rarity} aguardando!`);
           playAlarmSound(c.vehicle);
-          registerReset(c.vehicle, c.rarity);
-          
-        } else if (isReady && c.alerted) {
-          if (!c.lastReminderTime) {
-            c.lastReminderTime = Date.now();
-          }
-          
-          if (Date.now() - c.lastReminderTime >= 120000) {
-            c.lastReminderTime = Date.now();
-            localStorage.setItem('cooldown_actives', JSON.stringify(activeCooldowns));
-            
-            showDiscreetMessage(`Lembrete: ${c.vehicle} ${c.rarity} aguardando!`);
-            playAlarmSound(c.vehicle);
-          }
         }
+      }
 
-        const totalMs = c.duration * 1000;
-        const elapsedMs = totalMs - Math.max(0, remainingMs);
-        const progressPercent = isReady ? 100 : Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100));
+      const totalMs = c.duration * 1000;
+      const elapsedMs = totalMs - Math.max(0, remainingMs);
+      const progressPercent = isReady ? 100 : Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100));
 
-        const timeFormatted = isReady ? 'PRONTO!' : formatTime(remainingMs);
-        const vipLabel = (c.vehicle !== 'Invasão') ? getVipBadgeLabel(c.vipTier) : '';
+      const timeFormatted = isReady ? 'PRONTO!' : formatTime(remainingMs);
+      const vipLabel = (c.vehicle !== 'Invasão') ? getVipBadgeLabel(c.vipTier) : '';
 
-        html += `
-          <div class="timer-item ${isReady ? 'ready' : ''}">
-            <div class="timer-item-main">
-              <div class="timer-info">
-                <span class="badge ${c.key}">${c.rarity}</span>
-                <strong style="font-size: 0.95rem;">${c.vehicle}</strong>
-                ${vipLabel ? `<span class="badge-vip">${vipLabel}</span>` : ''}
-              </div>
-              <div class="${isReady ? 'ready-text' : 'timer-display'}">
-                ${timeFormatted}
-              </div>
-              <button class="btn-delete"
-                onmousedown="startHoldDelete(event, '${c.id}')"
-                onmouseup="cancelHoldDelete(event, '${c.id}')"
-                onmouseleave="cancelHoldDelete(event, '${c.id}')"
-                ontouchstart="startHoldDelete(event, '${c.id}')"
-                ontouchend="cancelHoldDelete(event, '${c.id}')"
-                ontouchcancel="cancelHoldDelete(event, '${c.id}')"
-                title="Segure por 3 segundos para remover">
-                <span>✕</span>
-              </button>
+      html += `
+        <div class="timer-item ${isReady ? 'ready' : ''}">
+          <div class="timer-item-main">
+            <div class="timer-info">
+              <span class="badge ${c.key}">${c.rarity}</span>
+              <strong style="font-size: 0.95rem;">${c.vehicle}</strong>
+              ${vipLabel ? `<span class="badge-vip">${vipLabel}</span>` : ''}
             </div>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" style="width: ${progressPercent}%;"></div>
+            <div class="${isReady ? 'ready-text' : 'timer-display'}">
+              ${timeFormatted}
             </div>
+            <button class="btn-delete"
+              onmousedown="startHoldDelete(event, '${c.id}')"
+              onmouseup="cancelHoldDelete(event, '${c.id}')"
+              onmouseleave="cancelHoldDelete(event, '${c.id}')"
+              ontouchstart="startHoldDelete(event, '${c.id}')"
+              ontouchend="cancelHoldDelete(event, '${c.id}')"
+              ontouchcancel="cancelHoldDelete(event, '${c.id}')"
+              title="Segure por 3 segundos para remover">
+              <span>✕</span>
+            </button>
           </div>
-        `;
-      });
-
-      container.innerHTML = html;
-      updateSidebarSummary();
-    }
-
-    function formatTime(ms) {
-      const totalSeconds = Math.floor(ms / 1000);
-      const h = Math.floor(totalSeconds / 3600);
-      const m = Math.floor((totalSeconds % 3600) / 60);
-      const s = totalSeconds % 60;
-
-      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }
-
-    function updateSidebarSummary() {
-      const nextTimerEl = document.getElementById('nextResetTimer');
-      const nextInfoEl = document.getElementById('nextResetInfo');
-      const allTimerEl = document.getElementById('allResetTimer');
-      const allInfoEl = document.getElementById('allResetInfo');
-
-      const now = Date.now();
-      const running = activeCooldowns.filter(c => c.endTime > now);
-
-      if (running.length === 0) {
-        if (nextTimerEl) { nextTimerEl.textContent = '--:--:--'; nextTimerEl.style.color = '#10b981'; }
-        if (nextInfoEl) nextInfoEl.textContent = 'Nenhum cooldown ativo';
-        if (allTimerEl) { allTimerEl.textContent = '--:--:--'; allTimerEl.style.color = '#a5b4fc'; }
-        if (allInfoEl) allInfoEl.textContent = 'Nenhum cooldown ativo';
-        return;
-      }
-
-      const nextItem = running[0];
-      const nextMs = nextItem.endTime - now;
-      if (nextTimerEl) {
-        nextTimerEl.textContent = formatTime(nextMs);
-        nextTimerEl.style.color = '#10b981';
-      }
-      if (nextInfoEl) nextInfoEl.textContent = `${nextItem.vehicle} - ${nextItem.rarity}`;
-
-      const lastItem = running[running.length - 1];
-      const lastMs = lastItem.endTime - now;
-      if (allTimerEl) {
-        allTimerEl.textContent = formatTime(lastMs);
-        allTimerEl.style.color = '#a5b4fc';
-      }
-      if (allInfoEl) allInfoEl.textContent = `${running.length} item(ns) em andamento`;
-    }
-
-    window.addEventListener('load', () => {
-      const volRange = document.getElementById('volumeRange');
-      if (volRange) volRange.value = soundVolume * 100;
-      changeVolume(soundVolume * 100);
-
-      applyCompactUI();
-      applyVipUI();
-      applySoundUI();
-      renderStatsUI();
-      renderConfigGrid();
-      renderActionButtons();
-      updateTimers();
-
-      setInterval(updateTimers, 1000);
-
-      setTimeout(() => {
-        const preloader = document.getElementById('preloader');
-        if (preloader) preloader.classList.add('hidden');
-      }, 500);
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: ${progressPercent}%;"></div>
+          </div>
+        </div>
+      `;
     });
-  </script>
+
+    container.innerHTML = html;
+    updateSidebarSummary();
+  }
+
+  function formatTime(ms) {
+    if (ms < 0) ms = 0;
+    const totalSeconds = Math.floor(ms / 1000);
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function updateSidebarSummary() {
+    const nextTimerEl = document.getElementById('nextResetTimer');
+    const nextInfoEl = document.getElementById('nextResetInfo');
+    const allTimerEl = document.getElementById('allResetTimer');
+    const allInfoEl = document.getElementById('allResetInfo');
+
+    const now = Date.now();
+    const running = activeCooldowns.filter(c => c.endTime > now);
+
+    if (running.length === 0) {
+      if (nextTimerEl) { nextTimerEl.textContent = '--:--:--'; nextTimerEl.style.color = '#10b981'; }
+      if (nextInfoEl) nextInfoEl.textContent = 'Nenhum cooldown ativo';
+      if (allTimerEl) { allTimerEl.textContent = '--:--:--'; allTimerEl.style.color = '#a5b4fc'; }
+      if (allInfoEl) allInfoEl.textContent = 'Nenhum cooldown ativo';
+      return;
+    }
+
+    const nextItem = running[0];
+    const nextMs = nextItem.endTime - now;
+    if (nextTimerEl) {
+      nextTimerEl.textContent = formatTime(nextMs);
+      nextTimerEl.style.color = '#10b981';
+    }
+    if (nextInfoEl) nextInfoEl.textContent = `${nextItem.vehicle} - ${nextItem.rarity}`;
+
+    const lastItem = running[running.length - 1];
+    const lastMs = lastItem.endTime - now;
+    if (allTimerEl) {
+      allTimerEl.textContent = formatTime(lastMs);
+      allTimerEl.style.color = '#a5b4fc';
+    }
+    if (allInfoEl) allInfoEl.textContent = `${running.length} item(ns) em andamento`;
+  }
+
+  window.addEventListener('load', () => {
+    const volRange = document.getElementById('volumeRange');
+    if (volRange) volRange.value = soundVolume * 100;
+    changeVolume(soundVolume * 100);
+
+    const hInput = document.getElementById('farmHours');
+    const mInput = document.getElementById('farmMinutes');
+    const sInput = document.getElementById('farmSeconds');
+    if (hInput) hInput.value = farmTimerState.h ?? 0;
+    if (mInput) mInput.value = farmTimerState.m ?? 30;
+    if (sInput) sInput.value = farmTimerState.s ?? 0;
+
+    setFarmMode(farmMode);
+
+    applyCompactUI();
+    applyVipUI();
+    applySoundUI();
+    renderStatsUI();
+    renderConfigGrid();
+    selectType(selectedVehicle);
+    updateTimers();
+
+    setInterval(updateTimers, 1000);
+
+    setTimeout(() => {
+      const preloader = document.getElementById('preloader');
+      if (preloader) preloader.classList.add('hidden');
+    }, 500);
+  });
+</script>
 </body>
 </html>
