@@ -4,6 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="favicon.png">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+	<script src="supabase.js"></script>
+
+	<script src="auth.js"></script>
+
+	<script src="ranking.js"></script>
+
+	<script src="app.js"></script>
+  
+  
   <title>Monitor de Cooldowns</title>
   <style>
     :root {
@@ -1342,6 +1354,31 @@
 </head>
 <body>
 
+
+
+
+	<div class="login-box">
+
+		<button id="btnLogin" onclick="loginDiscord()">
+
+		Entrar com Discord
+
+		</button>
+
+		<div id="perfil" style="display:none">
+
+		<img id="avatar" width="40">
+
+		<span id="nomeUsuario"></span>
+
+		<button onclick="logout()">
+
+		Sair
+
+		</button>
+
+	</div>
+
   <!-- PRELOADER FUTURISTA -->
   <div id="preloader">
     <div class="loader-ring"></div>
@@ -2510,9 +2547,9 @@
     if (!grid) return;
 
     const items = [
-      { name: 'Invasão', key: 'invasao' },
-      { name: 'Helicóptero (Botão Único)', key: 'helicoptero' },
-      { name: 'Tank (Botão Único)', key: 'tank' },
+      { name: 'Invasão (Geral 30m)', key: 'invasao' },
+      { name: 'Helicóptero (Padrão)', key: 'helicoptero' },
+      { name: 'Tank (Padrão)', key: 'tank' },
       ...rarities
     ];
 
@@ -2733,4 +2770,13 @@
   });
 </script>
 </body>
+<script>
+
+window.onload=()=>{
+
+    verificarLogin();
+
+}
+
+</script>
 </html>
