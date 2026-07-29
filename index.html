@@ -493,6 +493,15 @@
       color: #fbbf24;
     }
 
+    .tank-icon {
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+      margin-right: 6px;
+      display: inline-block;
+      object-fit: contain;
+    }
+
     .mode-selector {
       display: flex;
       gap: 8px;
@@ -1057,14 +1066,14 @@
       top: 0;
       left: 0;
       height: 100%;
-      width: 0%;
+      width: var(--hold-width, 0%);
       background: #ef4444;
       z-index: 0;
-      transition: width 3s linear;
+      transition: width var(--hold-duration, 3000ms) linear;
     }
 
-    .btn-delete.holding::before {
-      width: 100%;
+    .btn-delete.no-anim::before {
+      transition: none !important;
     }
 
     .btn-delete span {
@@ -1391,7 +1400,7 @@
         <div class="controls-grid">
           <div class="type-selector">
             <button class="type-btn active" id="btnHeli" onclick="selectType('Helicóptero')">🚁 Helicóptero</button>
-            <button class="type-btn" id="btnTank" onclick="selectType('Tank')">🛡️ Tank</button>
+            <button class="type-btn" id="btnTank" onclick="selectType('Tank')"><img src="img/icons/tank.png" alt="Tank" class="tank-icon"> Tank</button>
             <button class="type-btn" id="btnInvasao" onclick="selectType('Invasão')">⚔️ Invasão</button>
             <button class="type-btn" id="btnFarm" onclick="selectType('Farm')">🌾 Farm</button>
           </div>
@@ -1602,11 +1611,14 @@
     isRunning: false
   };
 
-  /* SISTEMA DE CONTROLE DE ÁUDIO E AUDIO DUCKING */
+  /* SISTEMA DE CONTROLE DE ÁUDIO, FILA (QUEUE) E AUDIO DUCKING */
   let loopAudio = null;
   let activeAlertsCount = 0;
   const DUCK_FACTOR = 0.2; // Reduz o volume do som em loop para 20% durante avisos
   let audioUnlocked = false;
+  
+  const audioQueue = [];
+  let isProcessingQueue = false;
 
   function updateLoopVolume() {
     if (loopAudio) {
@@ -1652,7 +1664,9 @@
       loopAudio.currentTime = 0;
       loopAudio = null;
     }
+    audioQueue.length = 0; // Limpa a fila
     activeAlertsCount = 0;
+    isProcessingQueue = false;
   }
 
   function getAudioPath(vehicle) {
@@ -1670,6 +1684,41 @@
     playAudioFile(path, loop);
   }
 
+  function processAudioQueue() {
+    if (isProcessingQueue || audioQueue.length === 0) return;
+
+    isProcessingQueue = true;
+    const filePath = audioQueue.shift();
+
+    const alertAudio = new Audio(filePath);
+    alertAudio.volume = soundVolume;
+
+    activeAlertsCount++;
+    updateLoopVolume();
+
+    const handleAlertEnd = () => {
+      // Mantém o volume baixo durante a pausa de 2 segundos caso tenha mais na fila
+      setTimeout(() => {
+        activeAlertsCount = Math.max(0, activeAlertsCount - 1);
+        isProcessingQueue = false;
+        
+        if (audioQueue.length > 0) {
+           processAudioQueue(); // Processa o próximo
+        } else {
+           updateLoopVolume(); // Restaura o volume do farm ao acabar tudo
+        }
+      }, 2000); // 2000ms = 2 segundos de pausa
+    };
+
+    alertAudio.addEventListener('ended', handleAlertEnd);
+    alertAudio.addEventListener('error', handleAlertEnd);
+
+    alertAudio.play().catch(e => {
+      console.log('Erro ao tocar aviso:', e);
+      handleAlertEnd();
+    });
+  }
+
   function playAudioFile(filePath, loop = false) {
     if (!soundEnabled) return;
 
@@ -1683,24 +1732,9 @@
       updateLoopVolume();
       loopAudio.play().catch(e => console.log('Erro ao tocar áudio em loop:', e));
     } else {
-      const alertAudio = new Audio(filePath);
-      alertAudio.volume = soundVolume;
-
-      activeAlertsCount++;
-      updateLoopVolume();
-
-      const handleAlertEnd = () => {
-        activeAlertsCount = Math.max(0, activeAlertsCount - 1);
-        updateLoopVolume();
-      };
-
-      alertAudio.addEventListener('ended', handleAlertEnd);
-      alertAudio.addEventListener('error', handleAlertEnd);
-
-      alertAudio.play().catch(e => {
-        console.log('Erro ao tocar aviso:', e);
-        handleAlertEnd();
-      });
+      // Adiciona o áudio à fila e aciona o processador
+      audioQueue.push(filePath);
+      processAudioQueue();
     }
   }
 
@@ -1736,29 +1770,58 @@
   /* LÓGICA DE MANTER PRESSIONADO PARA REMOVER (3 SEGUNDOS) */
   let holdTimers = {};
 
+  const HOLD_DURATION = 3000;
+
+  function applyHoldVisual(btn, id) {
+    const info = holdTimers[id];
+    if (!btn || !info) return;
+    const remaining = Math.max(0, info.end - Date.now());
+    const elapsed = HOLD_DURATION - remaining;
+    btn.style.setProperty('--hold-width', (elapsed / HOLD_DURATION * 100) + '%');
+    btn.classList.add('holding');
+    btn.classList.add('no-anim');
+    void btn.offsetWidth;
+    btn.classList.remove('no-anim');
+    btn.style.setProperty('--hold-duration', remaining + 'ms');
+    requestAnimationFrame(() => {
+      btn.style.setProperty('--hold-width', '100%');
+    });
+  }
+
+  function clearHoldVisual(btn) {
+    if (!btn) return;
+    btn.classList.remove('holding');
+    btn.classList.add('no-anim');
+    btn.style.setProperty('--hold-width', '0%');
+    void btn.offsetWidth;
+    btn.classList.remove('no-anim');
+  }
+
   function startHoldDelete(e, id) {
     if (e.type === 'touchstart') {
       e.preventDefault();
     }
     const btn = e.currentTarget;
-    btn.classList.add('holding');
 
     if (holdTimers[id]) {
-      clearTimeout(holdTimers[id]);
+      clearTimeout(holdTimers[id].timeout);
     }
 
-    holdTimers[id] = setTimeout(() => {
-      btn.classList.remove('holding');
+    holdTimers[id] = { end: Date.now() + HOLD_DURATION, timeout: null };
+    holdTimers[id].timeout = setTimeout(() => {
+      clearHoldVisual(btn);
       delete holdTimers[id];
       deleteCooldown(id);
-    }, 3000);
+    }, HOLD_DURATION);
+
+    applyHoldVisual(btn, id);
   }
 
   function cancelHoldDelete(e, id) {
     const btn = e.currentTarget || (e.target ? e.target.closest('.btn-delete') : null);
-    if (btn) btn.classList.remove('holding');
+    clearHoldVisual(btn);
     if (holdTimers[id]) {
-      clearTimeout(holdTimers[id]);
+      clearTimeout(holdTimers[id].timeout);
       delete holdTimers[id];
     }
   }
@@ -2213,7 +2276,7 @@
 
   function deleteCooldown(id) {
     if (holdTimers[id]) {
-      clearTimeout(holdTimers[id]);
+      clearTimeout(holdTimers[id].timeout);
       delete holdTimers[id];
     }
     activeCooldowns = activeCooldowns.filter(c => c.id !== id);
@@ -2533,7 +2596,6 @@
 
       const timeFormatted = isReady ? 'PRONTO!' : formatTime(remainingMs);
       const vipLabel = (c.vehicle !== 'Invasão') ? getVipBadgeLabel(c.vipTier) : '';
-      const isHolding = !!holdTimers[c.id];
 
       html += `
         <div class="timer-item ${isReady ? 'ready' : ''}">
@@ -2546,7 +2608,7 @@
             <div class="${isReady ? 'ready-text' : 'timer-display'}">
               ${timeFormatted}
             </div>
-            <button class="btn-delete ${isHolding ? 'holding' : ''}"
+            <button class="btn-delete" data-hold-id="${c.id}"
               onmousedown="startHoldDelete(event, '${c.id}')"
               onmouseup="cancelHoldDelete(event, '${c.id}')"
               onmouseleave="cancelHoldDelete(event, '${c.id}')"
@@ -2566,6 +2628,10 @@
     });
 
     container.innerHTML = html;
+    Object.keys(holdTimers).forEach(id => {
+      const btn = container.querySelector(`.btn-delete[data-hold-id="${id}"]`);
+      if (btn) applyHoldVisual(btn, id);
+    });
     updateSidebarSummary();
   }
 
