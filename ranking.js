@@ -205,6 +205,37 @@
     );
   }
 
+  function notificarEstatisticasUsuario(stats) {
+    window.dispatchEvent(
+      new CustomEvent("ranking-user-stats-changed", {
+        detail: { stats }
+      })
+    );
+  }
+
+  async function carregarEstatisticasUsuario() {
+    if (!usuarioAtual) {
+      notificarEstatisticasUsuario(null);
+      return;
+    }
+
+    const client = window.supabaseClient;
+    if (!client) return;
+
+    const { data, error } = await client.rpc("get_my_reset_stats");
+
+    if (error) {
+      console.error("Erro ao carregar totais do usuário:", error.message);
+      return;
+    }
+
+    const estatisticas = Array.isArray(data) ? data[0] : data;
+    notificarEstatisticasUsuario({
+      total: Number(estatisticas?.total_count || 0),
+      today: Number(estatisticas?.today_count || 0)
+    });
+  }
+
   async function carregarTemposCooldown(userType) {
     const client = window.supabaseClient;
     if (!client) return;
@@ -318,6 +349,7 @@
 
     if (!usuarioAtual) {
       atualizarEditorNickname(null);
+      notificarEstatisticasUsuario(null);
       await carregarTemposCooldown("normal");
       return;
     }
@@ -338,7 +370,10 @@
       : "normal";
 
     atualizarEditorNickname(perfil);
-    await carregarTemposCooldown(tipoUsuarioAtual);
+    await Promise.all([
+      carregarTemposCooldown(tipoUsuarioAtual),
+      carregarEstatisticasUsuario()
+    ]);
   }
 
   async function salvarNickname() {
@@ -374,6 +409,7 @@
     proximaTrocaNickname = new Date(data).getTime();
     definirStatusNickname("Nick atualizado com sucesso.", "sucesso");
     atualizarCooldownNickname();
+    fecharEditorPerfil();
     await carregarRanking();
   }
 
@@ -394,6 +430,8 @@
       definirStatus("O reset local foi salvo, mas o ranking não pôde ser atualizado.", "erro");
       return;
     }
+
+    await carregarEstatisticasUsuario();
 
     if (categoriaAtual === categoria) {
       await carregarRanking();
@@ -483,6 +521,7 @@
   window.salvarNicknameRanking = salvarNickname;
   window.abrirPerfilRanking = abrirEditorPerfil;
   window.fecharPerfilRanking = fecharEditorPerfil;
+  window.atualizarEstatisticasRanking = carregarEstatisticasUsuario;
   window.getCooldownDurationSeconds = key => {
     const value = temposCooldown[key];
     return Number.isFinite(value) && value > 0 ? value : null;

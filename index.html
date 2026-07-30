@@ -1787,6 +1787,8 @@
   let activeCooldowns = JSON.parse(localStorage.getItem('cooldown_actives')) || [];
 
   const STATS_KEY = 'cooldown_app_stats_v1';
+  const STATS_TIME_ZONE = 'America/Sao_Paulo';
+  let authenticatedResetStats = null;
 
   /* SISTEMA DE CONTROLE DE ÁUDIO, FILA (QUEUE) E AUDIO DUCKING */
   let loopAudio = null;
@@ -2038,31 +2040,79 @@
   }
 
   /* ESTATÍSTICAS E HISTÓRICO */
+  function getStatsDateKey(date = new Date()) {
+    const parts = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: STATS_TIME_ZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    const year = values.year;
+    const month = values.month;
+    const day = values.day;
+    return `${year}-${month}-${day}`;
+  }
+
   function getStats() {
-    const defaultStats = { total: 0, today: 0, lastDate: '', history: [] };
-    return JSON.parse(localStorage.getItem(STATS_KEY)) || defaultStats;
+    const defaultStats = {
+      total: 0,
+      today: 0,
+      lastDate: getStatsDateKey(),
+      history: []
+    };
+
+    let savedStats = null;
+    try {
+      savedStats = JSON.parse(localStorage.getItem(STATS_KEY));
+    } catch (error) {
+      console.warn('Histórico local inválido; iniciando um novo.', error);
+    }
+
+    const stats = {
+      ...defaultStats,
+      ...(savedStats || {}),
+      history: Array.isArray(savedStats?.history) ? savedStats.history : []
+    };
+
+    const currentDate = getStatsDateKey();
+    if (stats.lastDate !== currentDate) {
+      stats.today = 0;
+      stats.lastDate = currentDate;
+      localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    }
+
+    return stats;
   }
 
   function registerReset(itemName, rarityName) {
     const stats = getStats();
-    const today = new Date().toLocaleDateString('pt-BR');
+    const now = new Date();
+    const todayKey = getStatsDateKey(now);
+    const todayLabel = now.toLocaleDateString('pt-BR', {
+      timeZone: STATS_TIME_ZONE
+    });
 
-    if (stats.lastDate !== today) {
+    if (stats.lastDate !== todayKey) {
       stats.today = 0;
-      stats.lastDate = today;
+      stats.lastDate = todayKey;
     }
 
     stats.total++;
     stats.today++;
 
-    const timeString = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const timeString = now.toLocaleTimeString('pt-BR', {
+      timeZone: STATS_TIME_ZONE,
+      hour: '2-digit',
+      minute: '2-digit'
+    });
 
     if (!stats.history) stats.history = [];
 
     stats.history.unshift({
       item: itemName,
       rarity: rarityName,
-      time: `${today} às ${timeString}`
+      time: `${todayLabel} às ${timeString}`
     });
 
     if (stats.history.length > 20) {
@@ -2090,14 +2140,21 @@
     const confirmClear = await showCustomModal({
       title: 'Limpar Histórico',
       icon: '🗑️',
-      message: 'Tem certeza que deseja apagar todo o **histórico de registros** e zerar os contadores?',
+      message: authenticatedResetStats
+        ? 'Tem certeza que deseja apagar o **histórico deste navegador**? Os totais da sua conta no banco não serão apagados.'
+        : 'Tem certeza que deseja apagar todo o **histórico deste navegador** e zerar os contadores locais?',
       confirmText: 'Sim, Apagar Registro',
       cancelText: 'Cancelar',
       isDanger: true
     });
 
     if (confirmClear) {
-      const resetStats = { total: 0, today: 0, lastDate: '', history: [] };
+      const resetStats = {
+        total: 0,
+        today: 0,
+        lastDate: getStatsDateKey(),
+        history: []
+      };
       localStorage.setItem(STATS_KEY, JSON.stringify(resetStats));
       renderStatsUI();
     }
@@ -2109,9 +2166,10 @@
     const totalEl = document.getElementById('statTotal');
     const todayEl = document.getElementById('statToday');
     const historyList = document.getElementById('historyList');
+    const visibleStats = authenticatedResetStats || stats;
 
-    if (totalEl) totalEl.textContent = stats.total;
-    if (todayEl) todayEl.textContent = stats.today;
+    if (totalEl) totalEl.textContent = visibleStats.total;
+    if (todayEl) todayEl.textContent = visibleStats.today;
 
     if (historyList) {
       if (!stats.history || stats.history.length === 0) {
@@ -2128,6 +2186,37 @@
         `).join('');
       }
     }
+  }
+
+  function scheduleStatsMidnightReset() {
+    const now = Date.now();
+    const currentDate = getStatsDateKey(new Date(now));
+    let beforeMidnight = now;
+    let afterMidnight = now + (30 * 60 * 60 * 1000);
+
+    while (afterMidnight - beforeMidnight > 1000) {
+      const middle = Math.floor((beforeMidnight + afterMidnight) / 2);
+      if (getStatsDateKey(new Date(middle)) === currentDate) {
+        beforeMidnight = middle;
+      } else {
+        afterMidnight = middle;
+      }
+    }
+
+    setTimeout(() => {
+      getStats();
+
+      if (authenticatedResetStats) {
+        authenticatedResetStats = {
+          ...authenticatedResetStats,
+          today: 0
+        };
+      }
+
+      renderStatsUI();
+      window.atualizarEstatisticasRanking?.();
+      scheduleStatsMidnightReset();
+    }, afterMidnight - now + 100);
   }
 
   function toggleSettingsPopover(e) {
@@ -2573,6 +2662,24 @@
     renderActionButtons();
   });
 
+  window.addEventListener('ranking-user-stats-changed', event => {
+    const stats = event.detail?.stats;
+    authenticatedResetStats = stats
+      ? {
+          total: Number(stats.total || 0),
+          today: Number(stats.today || 0)
+        }
+      : null;
+    renderStatsUI();
+  });
+
+  window.addEventListener('discord-auth-changed', event => {
+    if (!event.detail?.user) {
+      authenticatedResetStats = null;
+      renderStatsUI();
+    }
+  });
+
   window.addEventListener('load', () => {
     const volRange = document.getElementById('volumeRange');
     if (volRange) volRange.value = soundVolume * 100;
@@ -2581,6 +2688,7 @@
     applyCompactUI();
     applySoundUI();
     renderStatsUI();
+    scheduleStatsMidnightReset();
     selectType(selectedVehicle);
     updateTimers();
 
