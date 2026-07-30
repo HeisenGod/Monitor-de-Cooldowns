@@ -1,4 +1,7 @@
 (() => {
+  const AUTO_REFRESH_MS = 10 * 60 * 1000;
+  const NICKNAME_COOLDOWN_MS = 10 * 60 * 1000;
+
   const CATEGORIAS = {
     helicoptero: "Helicóptero",
     tanque: "Tanque",
@@ -10,11 +13,15 @@
     vip_tier_1: "VIP Tier 1",
     vip_tier_2: "VIP Tier 2",
     vip_tier_3: "VIP Tier 3",
-    el_patrono: "El Patrono"
+    el_patron: "El Patron"
   };
 
   let categoriaAtual = "helicoptero";
   let registrosAtuais = [];
+  let usuarioAtual = null;
+  let tipoUsuarioAtual = "normal";
+  let temposCooldown = {};
+  let proximaTrocaNickname = null;
 
   function getElemento(id) {
     return document.getElementById(id);
@@ -22,6 +29,14 @@
 
   function definirStatus(mensagem, tipo = "normal") {
     const status = getElemento("rankingStatus");
+    if (!status) return;
+
+    status.textContent = mensagem;
+    status.dataset.tipo = tipo;
+  }
+
+  function definirStatusNickname(mensagem, tipo = "normal") {
+    const status = getElemento("rankingNicknameStatus");
     if (!status) return;
 
     status.textContent = mensagem;
@@ -74,7 +89,7 @@
     if (perfil?.discord_avatar) {
       const img = document.createElement("img");
       img.src = perfil.discord_avatar;
-      img.alt = `Foto de ${perfil.discord_name || "usuário"}`;
+      img.alt = `Foto de ${perfil.display_name || "usuário"}`;
       img.loading = "lazy";
       celula.appendChild(img);
       return celula;
@@ -82,7 +97,7 @@
 
     const fallback = document.createElement("span");
     fallback.className = "ranking-avatar-fallback";
-    fallback.textContent = (perfil?.discord_name || "?").charAt(0).toUpperCase();
+    fallback.textContent = (perfil?.display_name || "?").charAt(0).toUpperCase();
     celula.appendChild(fallback);
     return celula;
   }
@@ -133,7 +148,7 @@
       linha.append(
         criarCelula(`${indice + 1}º`, "ranking-position"),
         criarAvatar(perfil),
-        criarCelula(perfil.discord_name || "Usuário do Discord", "ranking-player-name"),
+        criarCelula(perfil.display_name || "Usuário", "ranking-player-name"),
         criarTagTipo(perfil.user_type),
         criarCelula(String(registro.reset_count || 0), "ranking-reset-count")
       );
@@ -156,7 +171,7 @@
       .select(`
         reset_count,
         profile:ranking_profiles!inner (
-          discord_name,
+          display_name,
           discord_avatar,
           user_type
         )
@@ -168,7 +183,7 @@
     if (error) {
       console.error("Erro ao carregar o ranking:", error.message);
       definirStatus(
-        "Não foi possível carregar. Execute o arquivo supabase-ranking.sql.",
+        "Não foi possível carregar. Execute a versão atual de supabase-ranking.sql.",
         "erro"
       );
       return;
@@ -177,9 +192,160 @@
     registrosAtuais = data ?? [];
     renderizarRanking();
     definirStatus(
-      `${registrosAtuais.length} jogador(es) em ${CATEGORIAS[categoriaAtual]}.`,
+      `${registrosAtuais.length} jogador(es) em ${CATEGORIAS[categoriaAtual]}. Atualização automática a cada 10 minutos.`,
       "sucesso"
     );
+  }
+
+  function notificarTemposAtualizados() {
+    window.dispatchEvent(
+      new CustomEvent("cooldown-config-changed", {
+        detail: { userType: tipoUsuarioAtual }
+      })
+    );
+  }
+
+  async function carregarTemposCooldown(userType) {
+    const client = window.supabaseClient;
+    if (!client) return;
+
+    const { data, error } = await client
+      .from("cooldown_durations")
+      .select("cooldown_key, duration_seconds")
+      .eq("user_type", userType);
+
+    if (error) {
+      console.error("Erro ao carregar tempos do banco:", error.message);
+      temposCooldown = {};
+      notificarTemposAtualizados();
+      return;
+    }
+
+    temposCooldown = Object.fromEntries(
+      (data ?? []).map(item => [
+        item.cooldown_key,
+        Number(item.duration_seconds)
+      ])
+    );
+
+    notificarTemposAtualizados();
+  }
+
+  function atualizarEditorNickname(perfil) {
+    const input = getElemento("rankingNicknameInput");
+    const botao = getElemento("rankingNicknameSave");
+    if (!input || !botao) return;
+
+    if (!usuarioAtual) {
+      input.value = "";
+      input.placeholder = "Entre com o Discord para escolher seu nick";
+      input.disabled = true;
+      botao.disabled = true;
+      proximaTrocaNickname = null;
+      definirStatusNickname("O login é necessário apenas para registrar resets e trocar o nick.");
+      return;
+    }
+
+    input.disabled = false;
+    input.value = perfil?.display_name || window.getNomeDiscord?.(usuarioAtual) || "";
+    proximaTrocaNickname = perfil?.nickname_changed_at
+      ? new Date(perfil.nickname_changed_at).getTime() + NICKNAME_COOLDOWN_MS
+      : null;
+
+    atualizarCooldownNickname();
+  }
+
+  function atualizarCooldownNickname() {
+    const botao = getElemento("rankingNicknameSave");
+    if (!botao) return;
+
+    if (!usuarioAtual) {
+      botao.disabled = true;
+      botao.textContent = "Salvar nick";
+      return;
+    }
+
+    const restante = proximaTrocaNickname
+      ? Math.max(0, proximaTrocaNickname - Date.now())
+      : 0;
+
+    if (restante > 0) {
+      const minutos = Math.floor(restante / 60000);
+      const segundos = Math.floor((restante % 60000) / 1000);
+      botao.disabled = true;
+      botao.textContent = `Aguarde ${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
+      definirStatusNickname("O nick pode ser alterado uma vez a cada 10 minutos.", "aviso");
+      return;
+    }
+
+    botao.disabled = false;
+    botao.textContent = "Salvar nick";
+    definirStatusNickname("O nome original do Discord continuará salvo no banco.");
+  }
+
+  async function carregarContextoUsuario(user) {
+    usuarioAtual = user ?? null;
+    tipoUsuarioAtual = "normal";
+
+    if (!usuarioAtual) {
+      atualizarEditorNickname(null);
+      await carregarTemposCooldown("normal");
+      return;
+    }
+
+    const client = window.supabaseClient;
+    const { data, error } = await client.rpc("sync_ranking_profile");
+
+    if (error) {
+      console.error("Erro ao sincronizar perfil do ranking:", error.message);
+      atualizarEditorNickname(null);
+      await carregarTemposCooldown("normal");
+      return;
+    }
+
+    const perfil = Array.isArray(data) ? data[0] : data;
+    tipoUsuarioAtual = TIPOS_USUARIO[perfil?.user_type]
+      ? perfil.user_type
+      : "normal";
+
+    atualizarEditorNickname(perfil);
+    await carregarTemposCooldown(tipoUsuarioAtual);
+  }
+
+  async function salvarNickname() {
+    const input = getElemento("rankingNicknameInput");
+    const botao = getElemento("rankingNicknameSave");
+    const nickname = input?.value.trim() || "";
+
+    if (!usuarioAtual) {
+      definirStatusNickname("Entre com o Discord para trocar o nick.", "aviso");
+      return;
+    }
+
+    if (nickname.length < 2 || nickname.length > 32) {
+      definirStatusNickname("Use um nick entre 2 e 32 caracteres.", "erro");
+      return;
+    }
+
+    if (botao) botao.disabled = true;
+    definirStatusNickname("Salvando nick...");
+
+    const { data, error } = await window.supabaseClient.rpc(
+      "update_ranking_nickname",
+      { p_display_name: nickname }
+    );
+
+    if (error) {
+      console.error("Erro ao trocar o nick:", error.message);
+      definirStatusNickname(error.message || "Não foi possível trocar o nick.", "erro");
+      atualizarCooldownNickname();
+      return;
+    }
+
+    proximaTrocaNickname = new Date(data).getTime();
+    definirStatusNickname("Nick atualizado com sucesso.", "sucesso");
+    atualizarCooldownNickname();
+    await carregarRanking();
   }
 
   async function registrarResetNoRanking(itemName) {
@@ -256,14 +422,33 @@
     atualizarCheckboxTodos();
   }
 
-  function inicializarRanking() {
+  async function inicializarRanking() {
     conectarRegistroDeResets();
     configurarFiltros();
     selecionarAba(categoriaAtual);
+
+    const user = await window.getUsuarioDiscord?.();
+    await carregarContextoUsuario(user);
+
+    setInterval(() => {
+      carregarRanking();
+      carregarContextoUsuario(usuarioAtual);
+    }, AUTO_REFRESH_MS);
+
+    setInterval(atualizarCooldownNickname, 1000);
   }
 
-  window.carregarRanking = carregarRanking;
   window.selecionarAbaRanking = selecionarAba;
+  window.salvarNicknameRanking = salvarNickname;
+  window.getCooldownDurationSeconds = key => {
+    const value = temposCooldown[key];
+    return Number.isFinite(value) && value > 0 ? value : null;
+  };
+  window.getCurrentRankingUserType = () => tipoUsuarioAtual;
+
+  window.addEventListener("discord-auth-changed", event => {
+    carregarContextoUsuario(event.detail?.user ?? null);
+  });
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", inicializarRanking, { once: true });

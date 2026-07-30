@@ -368,142 +368,6 @@
       transition: all 0.3s ease;
     }
 
-    /* CONTROLE DE FARM DE DURAÇÃO E TEMPO */
-    .farm-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .farm-header h3 {
-      font-size: 1.15rem;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .farm-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .farm-inputs-grid {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .farm-input-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: #0f1117;
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 8px;
-    }
-
-    .farm-input-group input {
-      width: 50px;
-      background: transparent;
-      border: none;
-      color: #fff;
-      font-size: 1.05rem;
-      font-weight: bold;
-      text-align: center;
-      outline: none;
-    }
-
-    .farm-input-group span {
-      font-size: 0.8rem;
-      font-weight: bold;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
-
-    .farm-display {
-      font-family: monospace;
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: var(--vip-gold);
-      text-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
-      margin: 8px 0;
-      text-align: center;
-      letter-spacing: 1px;
-    }
-
-    .farm-controls {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      width: 100%;
-    }
-
-    .btn-farm-start {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid #10b981;
-      color: #34d399;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-farm-start:hover:not(:disabled) {
-      background: #10b981;
-      color: #000;
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
-    }
-
-    .btn-farm-pause {
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid #f59e0b;
-      color: #fbbf24;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-farm-pause:hover:not(:disabled) {
-      background: #f59e0b;
-      color: #000;
-      box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
-    }
-
-    .btn-farm-reset {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid #ef4444;
-      color: #fca5a5;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-farm-reset:hover {
-      background: #ef4444;
-      color: #fff;
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
-    }
-
-    .btn-farm-start:disabled, .btn-farm-pause:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      filter: grayscale(1);
-    }
-
     .ranking-card {
       border-color: rgba(245, 158, 11, 0.35);
     }
@@ -527,6 +391,66 @@
       font-size: 0.86rem;
       line-height: 1.5;
     }
+
+    .ranking-nickname {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #0f1117;
+    }
+
+    .ranking-nickname label {
+      width: 100%;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .ranking-nickname input {
+      flex: 1;
+      min-width: 210px;
+      padding: 9px 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+      background: var(--card-bg);
+      color: #fff;
+    }
+
+    .ranking-nickname input:focus {
+      border-color: var(--accent);
+    }
+
+    .ranking-nickname button {
+      padding: 9px 13px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: rgba(99, 102, 241, 0.14);
+      color: #c7d2fe;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .ranking-nickname button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    #rankingNicknameStatus {
+      width: 100%;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    #rankingNicknameStatus[data-tipo="sucesso"] { color: #34d399; }
+    #rankingNicknameStatus[data-tipo="aviso"] { color: #fbbf24; }
+    #rankingNicknameStatus[data-tipo="erro"] { color: #f87171; }
 
     .ranking-tabs {
       display: grid;
@@ -694,7 +618,7 @@
       color: #f9a8d4;
     }
 
-    .ranking-user-tag.el_patrono {
+    .ranking-user-tag.el_patron {
       border-color: var(--vip-gold);
       background: rgba(245, 158, 11, 0.12);
       color: #fbbf24;
@@ -752,13 +676,6 @@
       border-color: #ef4444;
       background: rgba(239, 68, 68, 0.15);
       box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
-    }
-
-    .type-btn#btnFarm.active {
-      border-color: var(--vip-gold);
-      background: rgba(245, 158, 11, 0.15);
-      box-shadow: 0 0 15px rgba(245, 158, 11, 0.35);
-      color: #fbbf24;
     }
 
     .tank-icon {
@@ -877,45 +794,6 @@
     .btn-compact.compact-active {
       background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
       border-color: #a5b4fc;
-      color: #fff;
-    }
-
-    /* SELETORES DE VIP TIER */
-    .vip-select-box {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      background: #0f1117;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #523e1b;
-    }
-
-    .vip-select-label {
-      font-size: 0.78rem;
-      font-weight: bold;
-      color: var(--vip-gold);
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .vip-select {
-      width: 100%;
-      padding: 8px;
-      background: #151821;
-      border: 1px solid var(--vip-gold);
-      color: #fbbf24;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 0.85rem;
-      cursor: pointer;
-      outline: none;
-    }
-
-    .vip-select option {
-      background: #151821;
       color: #fff;
     }
 
@@ -1089,52 +967,6 @@
     .btn-start-all-master.invasao small {
       color: #fecaca;
       opacity: 1;
-    }
-
-
-    details summary {
-      cursor: pointer;
-      font-weight: bold;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-      user-select: none;
-    }
-
-    .config-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 10px;
-      margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px solid var(--border);
-    }
-
-    .config-item {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      background: #0f1117;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-
-    .config-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.8rem;
-    }
-
-    .config-inputs input {
-      width: 42px;
-      padding: 3px;
-      text-align: center;
-      background: #151821;
-      border: 1px solid var(--border);
-      color: #fff;
-      border-radius: 4px;
-      font-size: 0.8rem;
     }
 
     .timers-header {
@@ -1708,7 +1540,6 @@
             <button class="type-btn active" id="btnHeli" onclick="selectType('Helicóptero')">🚁 Helicóptero</button>
             <button class="type-btn" id="btnTank" onclick="selectType('Tank')"><img src="img/icons/tank.png" alt="Tank" class="tank-icon"> Tank</button>
             <button class="type-btn" id="btnInvasao" onclick="selectType('Invasão')">⚔️ Invasão</button>
-            <button class="type-btn" id="btnFarm" onclick="selectType('Farm')">🌾 Farm</button>
           </div>
 
           <div class="settings-dropdown-wrapper">
@@ -1718,18 +1549,6 @@
             
             <div class="settings-popover" id="settingsPopover">
               <div class="popover-header">⚙️ Configurações</div>
-
-              <!-- SELETOR DE TIERS VIP -->
-              <div class="vip-select-box">
-                <span class="vip-select-label">👑 Nível VIP Ativo:</span>
-                <select id="vipTierSelect" class="vip-select" onchange="changeVipTier(this.value)">
-                  <option value="none">Sem VIP (Normal - 60m)</option>
-                  <option value="tier1">VIP Tier 1 (50m)</option>
-                  <option value="tier2">VIP Tier 2 (40m)</option>
-                  <option value="tier3">VIP Tier 3 (30m)</option>
-                  <option value="el_patron">VIP El Patron (10m)</option>
-                </select>
-              </div>
 
               <button class="btn-action btn-compact" id="btnCompact" onclick="toggleCompactMode()">
                 📱 Modo Mini: <span id="compactStatusText">OFF</span>
@@ -1762,57 +1581,36 @@
         <div id="actionButtonsContainer"></div>
       </div>
 
-      <!-- CARD DEDICADO DE FARM (OCULTO POR PADRÃO, EXIBIDO APENAS SE FARM ESTIVER SELECIONADO) -->
-      <div class="card" id="farmCardSection" style="display: none;">
-
-        <!-- MODO TEMPORIZADOR (REGRESSIVO COM HORAS, MINUTOS E SEGUNDOS) -->
-        <div id="farmTimerSection" class="farm-section">
-          <div class="farm-inputs-grid">
-            <div class="farm-input-group">
-              <input type="number" id="farmHours" min="0" max="99" value="0" placeholder="00" oninput="updateFarmTimerInputs()">
-              <span>h</span>
-            </div>
-            <div class="farm-input-group">
-              <input type="number" id="farmMinutes" min="0" max="59" value="30" placeholder="00" oninput="updateFarmTimerInputs()">
-              <span>m</span>
-            </div>
-            <div class="farm-input-group">
-              <input type="number" id="farmSeconds" min="0" max="59" value="0" placeholder="00" oninput="updateFarmTimerInputs()">
-              <span>s</span>
-            </div>
-          </div>
-          <div class="farm-display" id="farmTimerDisplay">00:30:00</div>
-          <div class="farm-controls">
-            <button class="btn-farm-start" id="btnFarmTimerStart" onclick="startFarmTimer()">▶️ Iniciar</button>
-            <button class="btn-farm-pause" id="btnFarmTimerPause" onclick="pauseFarmTimer()" disabled>⏸️ Pausar</button>
-            <button class="btn-farm-reset" onclick="resetFarmTimer()">🔄 Reiniciar</button>
-          </div>
-        </div>
-
-        <!-- MODO CRONÔMETRO (PROGRESSIVO PARTINDO DE 00:00:00) -->
-        <div id="farmStopwatchSection" class="farm-section" style="display:none;">
-          <div class="farm-display" id="farmStopwatchDisplay">00:00:00</div>
-          <div class="farm-controls">
-            <button class="btn-farm-start" id="btnFarmStopwatchStart" onclick="startFarmStopwatch()">▶️ Iniciar Farm</button>
-            <button class="btn-farm-pause" id="btnFarmStopwatchPause" onclick="pauseFarmStopwatch()" disabled>⏸️ Pausar</button>
-            <button class="btn-farm-reset" onclick="resetFarmStopwatch()">🔄 Zerar</button>
-          </div>
-        </div>
-
-      </div>
-
       <section class="card ranking-card" aria-labelledby="rankingTitle">
         <div class="ranking-header">
           <h2 id="rankingTitle">🏆 Ranking de Resets</h2>
-          <button class="auth-button" type="button" onclick="carregarRanking()">
-            Atualizar
-          </button>
         </div>
 
         <p class="ranking-description">
           Todos podem visualizar. Os resets entram automaticamente no ranking
           quando o cooldown termina e o usuário está conectado ao Discord.
         </p>
+
+        <div class="ranking-nickname">
+          <label for="rankingNicknameInput">Nick exibido no ranking</label>
+          <input
+            id="rankingNicknameInput"
+            type="text"
+            minlength="2"
+            maxlength="32"
+            autocomplete="off"
+            disabled
+          >
+          <button
+            id="rankingNicknameSave"
+            type="button"
+            onclick="salvarNicknameRanking()"
+            disabled
+          >
+            Salvar nick
+          </button>
+          <span id="rankingNicknameStatus" role="status" aria-live="polite"></span>
+        </div>
 
         <div class="ranking-tabs" role="tablist" aria-label="Categoria do ranking">
           <button
@@ -1871,8 +1669,8 @@
               VIP Tier 3
             </label>
             <label class="ranking-filter-option">
-              <input class="ranking-type-filter" type="checkbox" value="el_patrono" checked>
-              El Patrono
+              <input class="ranking-type-filter" type="checkbox" value="el_patron" checked>
+              El Patron
             </label>
           </div>
         </fieldset>
@@ -1898,13 +1696,6 @@
           </table>
         </div>
       </section>
-
-      <div class="card">
-        <details>
-          <summary>⚙️ Personalizar Tempos (Tiers VIP)</summary>
-          <div id="configGrid" class="config-grid"></div>
-        </details>
-      </div>
 
       <div class="card">
         <div class="timers-header">
@@ -1948,44 +1739,8 @@
     { name: "John Wick", key: "john-wick", heliOnly: true }
   ];
 
-  /* CONFIGURAÇÃO DE TEMPOS PADRÃO POR TIER (INVASÃO FIXA EM 30M GERAL) */
-  const defaultTimes = {
-    invasao: {
-      none: { h: 0, m: 30 },
-      tier1: { h: 0, m: 30 },
-      tier2: { h: 0, m: 30 },
-      tier3: { h: 0, m: 30 },
-      el_patron: { h: 0, m: 30 }
-    },
-    helicoptero: {
-      none: { h: 1, m: 0 },
-      tier1: { h: 0, m: 50 },
-      tier2: { h: 0, m: 40 },
-      tier3: { h: 0, m: 30 },
-      el_patron: { h: 0, m: 10 }
-    },
-    tank: {
-      none: { h: 1, m: 0 },
-      tier1: { h: 0, m: 50 },
-      tier2: { h: 0, m: 40 },
-      tier3: { h: 0, m: 30 },
-      el_patron: { h: 0, m: 10 }
-    }
-  };
-
-  rarities.forEach(r => {
-    defaultTimes[r.key] = {
-      none: { h: 1, m: 0 },
-      tier1: { h: 0, m: 50 },
-      tier2: { h: 0, m: 40 },
-      tier3: { h: 0, m: 30 },
-      el_patron: { h: 0, m: 10 }
-    };
-  });
-
   let selectedVehicle = 'Helicóptero';
   let controlMode = localStorage.getItem('cooldown_control_mode') || 'individual';
-  let selectedVipTier = localStorage.getItem('cooldown_vip_tier_v4') || 'none';
   let compactMode = JSON.parse(localStorage.getItem('cooldown_compact_mode')) || false;
   let soundEnabled = JSON.parse(localStorage.getItem('cooldown_sound_enabled')) ?? true;
 
@@ -1993,28 +1748,9 @@
   let soundVolume = rawVolume !== null ? parseFloat(rawVolume) : 0.8;
   if (isNaN(soundVolume)) soundVolume = 0.8;
 
-  let savedTimes = JSON.parse(localStorage.getItem('cooldown_durations_v4')) || defaultTimes;
   let activeCooldowns = JSON.parse(localStorage.getItem('cooldown_actives')) || [];
 
   const STATS_KEY = 'cooldown_app_stats_v1';
-
-  /* SISTEMA DE FARM (TEMPORIZADOR E CRONÔMETRO) */
-  let farmMode = localStorage.getItem('farm_mode') || 'timer';
-  let farmTimerState = JSON.parse(localStorage.getItem('farm_timer_state_v3')) || {
-    h: 0,
-    m: 30,
-    s: 0,
-    remainingMs: 30 * 60 * 1000,
-    endTime: null,
-    isRunning: false,
-    alerted: false
-  };
-
-  let farmStopwatchState = JSON.parse(localStorage.getItem('farm_stopwatch_state')) || {
-    elapsedMs: 0,
-    startTime: null,
-    isRunning: false
-  };
 
   /* SISTEMA DE CONTROLE DE ÁUDIO, FILA (QUEUE) E AUDIO DUCKING */
   let loopAudio = null;
@@ -2076,7 +1812,6 @@
 
   function getAudioPath(vehicle) {
     const v = (vehicle || '').toLowerCase();
-    if (v.includes('farm')) return 'Som/avisos/alerta.mp3';
     if (v.includes('heli')) return 'Som/avisos/Heli.mp3';
     if (v.includes('tank')) return 'Som/avisos/Tank.mp3';
     if (v.includes('invasa') || v.includes('invasão') || v.includes('raid')) return 'Som/avisos/Invasao.mp3';
@@ -2110,7 +1845,7 @@
         if (audioQueue.length > 0) {
            processAudioQueue(); // Processa o próximo
         } else {
-           updateLoopVolume(); // Restaura o volume do farm ao acabar tudo
+           updateLoopVolume();
         }
       }, 2000); // 2000ms = 2 segundos de pausa
     };
@@ -2142,35 +1877,6 @@
       processAudioQueue();
     }
   }
-
-  /* GARANTE COMPATIBILIDADE E FORÇA INVASÃO PARA 30M EM TODOS OS TIERS */
-  function normalizeSavedTimes() {
-    if (savedTimes.raid) {
-      savedTimes.invasao = savedTimes.raid;
-      delete savedTimes.raid;
-    }
-
-    const keys = ['invasao', 'helicoptero', 'tank', ...rarities.map(r => r.key)];
-    keys.forEach(k => {
-      if (!savedTimes[k]) savedTimes[k] = {};
-      if (!savedTimes[k].none) savedTimes[k].none = savedTimes[k].normal || { h: 1, m: 0 };
-      if (!savedTimes[k].tier1) savedTimes[k].tier1 = { h: 0, m: 50 };
-      if (!savedTimes[k].tier2) savedTimes[k].tier2 = { h: 0, m: 40 };
-      if (!savedTimes[k].tier3) savedTimes[k].tier3 = { h: 0, m: 30 };
-      if (!savedTimes[k].el_patron) savedTimes[k].el_patron = { h: 0, m: 10 };
-    });
-
-    savedTimes.invasao = {
-      none: { h: 0, m: 30 },
-      tier1: { h: 0, m: 30 },
-      tier2: { h: 0, m: 30 },
-      tier3: { h: 0, m: 30 },
-      el_patron: { h: 0, m: 30 }
-    };
-
-    localStorage.setItem('cooldown_durations_v4', JSON.stringify(savedTimes));
-  }
-  normalizeSavedTimes();
 
   /* LÓGICA DE MANTER PRESSIONADO PARA REMOVER (3 SEGUNDOS) */
   let holdTimers = {};
@@ -2479,18 +2185,8 @@
     if (type === 'Helicóptero') document.getElementById('btnHeli').classList.add('active');
     if (type === 'Tank') document.getElementById('btnTank').classList.add('active');
     if (type === 'Invasão') document.getElementById('btnInvasao').classList.add('active');
-    if (type === 'Farm') document.getElementById('btnFarm').classList.add('active');
-
-    const farmCard = document.getElementById('farmCardSection');
-    if (farmCard) {
-      farmCard.style.display = (type === 'Farm') ? 'block' : 'none';
-    }
 
     renderActionButtons();
-
-    if (type === 'Farm' && farmCard) {
-      farmCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
   }
 
   function setControlMode(mode) {
@@ -2519,20 +2215,6 @@
     }
   }
 
-  function changeVipTier(tier) {
-    selectedVipTier = tier;
-    localStorage.setItem('cooldown_vip_tier_v4', selectedVipTier);
-    renderConfigGrid();
-    renderActionButtons();
-  }
-
-  function applyVipUI() {
-    const select = document.getElementById('vipTierSelect');
-    if (select) {
-      select.value = selectedVipTier;
-    }
-  }
-
   function toggleSound() {
     soundEnabled = !soundEnabled;
     if (!soundEnabled) {
@@ -2557,21 +2239,7 @@
     if (!container) return;
 
     if (modeContainer) {
-      modeContainer.style.display = (selectedVehicle === 'Farm' || selectedVehicle === 'Invasão') ? 'none' : 'flex';
-    }
-
-    if (selectedVehicle === 'Farm') {
-      container.innerHTML = `
-        <div style="display: flex; flex-direction: column; gap: 12px; align-items: center; background: #0f1117; padding: 16px; border-radius: 10px; border: 1px solid var(--border);">
-          <div style="font-weight: bold; color: var(--vip-gold); font-size: 0.95rem;">🌾 Modos de Farm Disponíveis:</div>
-          <div class="mode-selector" style="margin-bottom:0; width: 100%; max-width: 400px;">
-            <button class="mode-btn ${farmMode === 'timer' ? 'active' : ''}" onclick="setFarmMode('timer')">⏳ Temporizador</button>
-            <button class="mode-btn ${farmMode === 'stopwatch' ? 'active' : ''}" onclick="setFarmMode('stopwatch')">⏱️ Cronômetro</button>
-          </div>
-          <small style="color: var(--text-muted); text-align: center;">Acesse as configurações do Farm no painel de controle abaixo.</small>
-        </div>
-      `;
-      return;
+      modeContainer.style.display = selectedVehicle === 'Invasão' ? 'none' : 'flex';
     }
 
     if (selectedVehicle === 'Invasão') {
@@ -2614,19 +2282,32 @@
   }
 
   function getFormattedDuration(key) {
-    const tier = selectedVipTier || 'none';
-    const t = (savedTimes[key] && savedTimes[key][tier]) || { h: 1, m: 0 };
-    const h = parseInt(t.h, 10) || 0;
-    const m = parseInt(t.m, 10) || 0;
-    return `${h > 0 ? h + 'h ' : ''}${m}m`;
+    const totalSeconds = window.getCooldownDurationSeconds?.(key);
+    if (!totalSeconds) return 'carregando...';
+
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m${s ? ` ${s}s` : ''}`;
+    return `${s}s`;
   }
 
-  function getVipBadgeLabel(tier) {
-    switch (tier) {
-      case 'tier1': return 'VIP T1';
-      case 'tier2': return 'VIP T2';
-      case 'tier3': return 'VIP T3';
-      case 'el_patron': return 'EL PATRON';
+  function getVipBadgeLabel(userType) {
+    switch (userType) {
+      case 'vip_tier_1':
+      case 'tier1':
+        return 'VIP T1';
+      case 'vip_tier_2':
+      case 'tier2':
+        return 'VIP T2';
+      case 'vip_tier_3':
+      case 'tier3':
+        return 'VIP T3';
+      case 'el_patron':
+      case 'el_patrono':
+        return 'EL PATRON';
       default: return '';
     }
   }
@@ -2651,10 +2332,18 @@
       }
     }
 
-    const timeObj = (savedTimes[key] && savedTimes[key][selectedVipTier]) || { h: 1, m: 0 };
-    const h = parseInt(timeObj.h, 10) || 0;
-    const m = parseInt(timeObj.m, 10) || 0;
-    const totalSeconds = (h * 3600) + (m * 60);
+    const totalSeconds = window.getCooldownDurationSeconds?.(key);
+    if (!totalSeconds) {
+      await showCustomModal({
+        title: 'Tempos ainda não carregados',
+        icon: '⏳',
+        message: 'Aguarde alguns segundos enquanto os tempos são carregados do banco de dados.',
+        alertOnly: true,
+        confirmText: 'Entendido'
+      });
+      return;
+    }
+
     const endTime = now + (totalSeconds * 1000);
 
     const newItem = {
@@ -2662,7 +2351,7 @@
       vehicle: vehicleName,
       rarity: rarityName,
       key: key,
-      vipTier: selectedVipTier,
+      userType: window.getCurrentRankingUserType?.() || 'normal',
       startTime: now,
       endTime: endTime,
       duration: totalSeconds,
@@ -2688,270 +2377,12 @@
     saveAndRender();
   }
 
-  /* LÓGICA DO TEMPORIZADOR E CRONÔMETRO DE FARM */
-  function setFarmMode(mode) {
-    farmMode = mode;
-    localStorage.setItem('farm_mode', mode);
-
-    const tSec = document.getElementById('farmTimerSection');
-    const sSec = document.getElementById('farmStopwatchSection');
-    if (tSec) tSec.style.display = mode === 'timer' ? 'flex' : 'none';
-    if (sSec) sSec.style.display = mode === 'stopwatch' ? 'flex' : 'none';
-
-    if (selectedVehicle === 'Farm') {
-      renderActionButtons();
-    }
-  }
-
-  function getFarmInputDurationMs() {
-    const h = Math.max(0, parseInt(document.getElementById('farmHours')?.value, 10) || 0);
-    const m = Math.max(0, Math.min(59, parseInt(document.getElementById('farmMinutes')?.value, 10) || 0));
-    const s = Math.max(0, Math.min(59, parseInt(document.getElementById('farmSeconds')?.value, 10) || 0));
-    const totalMs = ((h * 3600) + (m * 60) + s) * 1000;
-    return { h, m, s, ms: totalMs };
-  }
-
-  function updateFarmTimerInputs() {
-    if (!farmTimerState.isRunning) {
-      const dur = getFarmInputDurationMs();
-      farmTimerState.h = dur.h;
-      farmTimerState.m = dur.m;
-      farmTimerState.s = dur.s;
-      farmTimerState.remainingMs = dur.ms;
-      farmTimerState.alerted = false;
-      saveFarmTimerState();
-      renderFarmTimerDisplay();
-    }
-  }
-
-  function startFarmTimer() {
-    stopAudio();
-    unlockAudio();
-    const now = Date.now();
-
-    if (!farmTimerState.isRunning) {
-      if (farmTimerState.remainingMs <= 0 || farmTimerState.alerted) {
-        const dur = getFarmInputDurationMs();
-        farmTimerState.remainingMs = dur.ms;
-        farmTimerState.alerted = false;
-      }
-      farmTimerState.endTime = now + farmTimerState.remainingMs;
-      farmTimerState.isRunning = true;
-      saveFarmTimerState();
-      updateFarmUI();
-    }
-  }
-
-  function pauseFarmTimer() {
-    if (farmTimerState.isRunning) {
-      const now = Date.now();
-      farmTimerState.remainingMs = Math.max(0, farmTimerState.endTime - now);
-      farmTimerState.isRunning = false;
-      saveFarmTimerState();
-      updateFarmUI();
-    }
-  }
-
-  function resetFarmTimer() {
-    stopAudio();
-    const dur = getFarmInputDurationMs();
-    farmTimerState.h = dur.h;
-    farmTimerState.m = dur.m;
-    farmTimerState.s = dur.s;
-    farmTimerState.remainingMs = dur.ms;
-    farmTimerState.endTime = null;
-    farmTimerState.isRunning = false;
-    farmTimerState.alerted = false;
-    saveFarmTimerState();
-    updateFarmUI();
-  }
-
-  function saveFarmTimerState() {
-    localStorage.setItem('farm_timer_state_v3', JSON.stringify(farmTimerState));
-  }
-
-  function renderFarmTimerDisplay() {
-    const display = document.getElementById('farmTimerDisplay');
-    const startBtn = document.getElementById('btnFarmTimerStart');
-    const pauseBtn = document.getElementById('btnFarmTimerPause');
-
-    if (!display) return;
-
-    if (farmTimerState.remainingMs <= 0) {
-      display.textContent = "FARM CONCLUÍDO!";
-      display.style.color = "#10b981";
-    } else {
-      display.textContent = formatTime(farmTimerState.remainingMs);
-      display.style.color = "var(--vip-gold)";
-    }
-
-    if (startBtn) {
-      startBtn.disabled = farmTimerState.isRunning;
-      const totalMs = ((farmTimerState.h * 3600) + (farmTimerState.m * 60) + farmTimerState.s) * 1000;
-      if (!farmTimerState.isRunning && farmTimerState.remainingMs > 0 && farmTimerState.remainingMs < totalMs) {
-        startBtn.innerHTML = '▶️ Continuar';
-      } else {
-        startBtn.innerHTML = '▶️ Iniciar';
-      }
-    }
-
-    if (pauseBtn) {
-      pauseBtn.disabled = !farmTimerState.isRunning;
-    }
-  }
-
-  /* CRONÔMETRO DE FARM (SEM SOM AO PAUSAR/FINALIZAR) */
-  function startFarmStopwatch() {
-    if (!farmStopwatchState.isRunning) {
-      const now = Date.now();
-      farmStopwatchState.startTime = now - farmStopwatchState.elapsedMs;
-      farmStopwatchState.isRunning = true;
-      saveFarmStopwatchState();
-      updateFarmUI();
-    }
-  }
-
-  function pauseFarmStopwatch() {
-    if (farmStopwatchState.isRunning) {
-      const now = Date.now();
-      farmStopwatchState.elapsedMs = now - farmStopwatchState.startTime;
-      farmStopwatchState.isRunning = false;
-      saveFarmStopwatchState();
-      updateFarmUI();
-      
-      showDiscreetMessage("🌾 Cronômetro de Farm pausado/finalizado!");
-      registerReset('Farm', 'Cronômetro');
-    }
-  }
-
-  function resetFarmStopwatch() {
-    farmStopwatchState.elapsedMs = 0;
-    farmStopwatchState.startTime = null;
-    farmStopwatchState.isRunning = false;
-    saveFarmStopwatchState();
-    updateFarmUI();
-  }
-
-  function saveFarmStopwatchState() {
-    localStorage.setItem('farm_stopwatch_state', JSON.stringify(farmStopwatchState));
-  }
-
-  function renderFarmStopwatchDisplay() {
-    const display = document.getElementById('farmStopwatchDisplay');
-    const startBtn = document.getElementById('btnFarmStopwatchStart');
-    const pauseBtn = document.getElementById('btnFarmStopwatchPause');
-
-    if (!display) return;
-
-    display.textContent = formatTime(farmStopwatchState.elapsedMs);
-
-    if (startBtn) {
-      startBtn.disabled = farmStopwatchState.isRunning;
-      if (!farmStopwatchState.isRunning && farmStopwatchState.elapsedMs > 0) {
-        startBtn.innerHTML = '▶️ Continuar';
-      } else {
-        startBtn.innerHTML = '▶️ Iniciar Farm';
-      }
-    }
-
-    if (pauseBtn) {
-      pauseBtn.disabled = !farmStopwatchState.isRunning;
-    }
-  }
-
-  function updateFarmUI() {
-    const now = Date.now();
-
-    /* Atualizar Temporizador de Farm */
-    if (farmTimerState.isRunning) {
-      farmTimerState.remainingMs = farmTimerState.endTime - now;
-      if (farmTimerState.remainingMs <= 0) {
-        farmTimerState.remainingMs = 0;
-        farmTimerState.isRunning = false;
-
-        if (!farmTimerState.alerted) {
-          farmTimerState.alerted = true;
-          showDiscreetMessage("🌾 Temporizador de Farm concluído!");
-          playAlarmSound('Farm', true);
-          registerReset('Farm', 'Temporizador');
-        }
-        saveFarmTimerState();
-      }
-    }
-    renderFarmTimerDisplay();
-
-    /* Atualizar Cronômetro de Farm */
-    if (farmStopwatchState.isRunning) {
-      farmStopwatchState.elapsedMs = now - farmStopwatchState.startTime;
-    }
-    renderFarmStopwatchDisplay();
-  }
-
-  function renderConfigGrid() {
-    const grid = document.getElementById('configGrid');
-    if (!grid) return;
-
-    const items = [
-      { name: 'Invasão (Geral 30m)', key: 'invasao' },
-      { name: 'Helicóptero (Padrão)', key: 'helicoptero' },
-      { name: 'Tank (Padrão)', key: 'tank' },
-      ...rarities
-    ];
-
-    const tiersConfig = [
-      { id: 'none', label: 'Normal' },
-      { id: 'tier1', label: 'Tier 1' },
-      { id: 'tier2', label: 'Tier 2' },
-      { id: 'tier3', label: 'Tier 3' },
-      { id: 'el_patron', label: 'El Patron' }
-    ];
-
-    grid.innerHTML = items.map(item => {
-      const key = item.key;
-      const timeData = savedTimes[key] || {};
-
-      let rowsHtml = tiersConfig.map(tier => {
-        const t = timeData[tier.id] || { h: 0, m: 0 };
-        const isVipTier = tier.id !== 'none';
-        const style = isVipTier ? 'color: var(--vip-gold);' : '';
-
-        return `
-          <div class="config-row" style="${style}">
-            <span>${tier.label}:</span>
-            <div class="config-inputs">
-              <input type="number" min="0" max="24" value="${t.h}" onchange="updateConfigTime('${key}', '${tier.id}', 'h', this.value)"> h
-              <input type="number" min="0" max="59" value="${t.m}" onchange="updateConfigTime('${key}', '${tier.id}', 'm', this.value)"> m
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      return `
-        <div class="config-item">
-          <strong style="font-size:0.85rem; color:#fff;">${item.name}</strong>
-          ${rowsHtml}
-        </div>
-      `;
-    }).join('');
-  }
-
-  function updateConfigTime(key, tier, field, value) {
-    if (!savedTimes[key]) savedTimes[key] = {};
-    if (!savedTimes[key][tier]) savedTimes[key][tier] = { h: 0, m: 0 };
-
-    savedTimes[key][tier][field] = parseInt(value, 10) || 0;
-    localStorage.setItem('cooldown_durations_v4', JSON.stringify(savedTimes));
-    renderActionButtons();
-  }
-
   function saveAndRender() {
     localStorage.setItem('cooldown_actives', JSON.stringify(activeCooldowns));
     updateTimers();
   }
 
   function updateTimers() {
-    updateFarmUI();
-
     const container = document.getElementById('timerList');
     const now = Date.now();
 
@@ -3000,7 +2431,9 @@
       const progressPercent = isReady ? 100 : Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100));
 
       const timeFormatted = isReady ? 'PRONTO!' : formatTime(remainingMs);
-      const vipLabel = (c.vehicle !== 'Invasão') ? getVipBadgeLabel(c.vipTier) : '';
+      const vipLabel = (c.vehicle !== 'Invasão')
+        ? getVipBadgeLabel(c.userType || c.vipTier)
+        : '';
 
       html += `
         <div class="timer-item ${isReady ? 'ready' : ''}">
@@ -3084,25 +2517,18 @@
     if (allInfoEl) allInfoEl.textContent = `${running.length} item(ns) em andamento`;
   }
 
+  window.addEventListener('cooldown-config-changed', () => {
+    renderActionButtons();
+  });
+
   window.addEventListener('load', () => {
     const volRange = document.getElementById('volumeRange');
     if (volRange) volRange.value = soundVolume * 100;
     changeVolume(soundVolume * 100);
 
-    const hInput = document.getElementById('farmHours');
-    const mInput = document.getElementById('farmMinutes');
-    const sInput = document.getElementById('farmSeconds');
-    if (hInput) hInput.value = farmTimerState.h ?? 0;
-    if (mInput) mInput.value = farmTimerState.m ?? 30;
-    if (sInput) sInput.value = farmTimerState.s ?? 0;
-
-    setFarmMode(farmMode);
-
     applyCompactUI();
-    applyVipUI();
     applySoundUI();
     renderStatsUI();
-    renderConfigGrid();
     selectType(selectedVehicle);
     updateTimers();
 
