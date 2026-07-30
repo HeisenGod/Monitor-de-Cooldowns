@@ -392,7 +392,7 @@
       line-height: 1.5;
     }
 
-    .ranking-nickname {
+    .profile-nickname {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -404,7 +404,7 @@
       background: #0f1117;
     }
 
-    .ranking-nickname label {
+    .profile-nickname label {
       width: 100%;
       color: var(--text-muted);
       font-size: 0.78rem;
@@ -412,7 +412,7 @@
       text-transform: uppercase;
     }
 
-    .ranking-nickname input {
+    .profile-nickname input {
       flex: 1;
       min-width: 210px;
       padding: 9px 11px;
@@ -423,23 +423,8 @@
       color: #fff;
     }
 
-    .ranking-nickname input:focus {
+    .profile-nickname input:focus {
       border-color: var(--accent);
-    }
-
-    .ranking-nickname button {
-      padding: 9px 13px;
-      border: 1px solid var(--accent);
-      border-radius: 8px;
-      background: rgba(99, 102, 241, 0.14);
-      color: #c7d2fe;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .ranking-nickname button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
     }
 
     #rankingNicknameStatus {
@@ -678,6 +663,13 @@
       box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
     }
 
+    .type-btn#btnRanking.active {
+      border-color: var(--vip-gold);
+      background: rgba(245, 158, 11, 0.15);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.35);
+      color: #fbbf24;
+    }
+
     .tank-icon {
       width: 20px;
       height: 20px;
@@ -794,6 +786,18 @@
     .btn-compact.compact-active {
       background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
       border-color: #a5b4fc;
+      color: #fff;
+    }
+
+    .btn-profile {
+      width: 100%;
+      background: linear-gradient(135deg, #172554 0%, #0f1117 100%);
+      border: 2px solid #1d4ed8;
+      color: #93c5fd;
+    }
+
+    .btn-profile:hover {
+      border-color: #60a5fa;
       color: #fff;
     }
 
@@ -1480,6 +1484,43 @@
     </div>
   </div>
 
+  <div id="profileModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+      <div class="modal-header">
+        <span class="modal-icon">👤</span>
+        <h3 class="modal-title" id="profileModalTitle">Editar Perfil</h3>
+      </div>
+      <div class="modal-body">
+        <div class="profile-nickname">
+          <label for="rankingNicknameInput">Nick exibido no ranking</label>
+          <input
+            id="rankingNicknameInput"
+            type="text"
+            minlength="2"
+            maxlength="32"
+            autocomplete="off"
+            disabled
+          >
+          <span id="rankingNicknameStatus" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal btn-modal-cancel" type="button" onclick="fecharPerfilRanking()">
+          Cancelar
+        </button>
+        <button
+          class="btn-modal btn-modal-confirm"
+          id="rankingNicknameSave"
+          type="button"
+          onclick="salvarNicknameRanking()"
+          disabled
+        >
+          Salvar nick
+        </button>
+      </div>
+    </div>
+  </div>
+
   <h1 class="header-title">⏱️ Monitor de Cooldowns</h1>
 
   <div class="app-layout">
@@ -1540,6 +1581,7 @@
             <button class="type-btn active" id="btnHeli" onclick="selectType('Helicóptero')">🚁 Helicóptero</button>
             <button class="type-btn" id="btnTank" onclick="selectType('Tank')"><img src="img/icons/tank.png" alt="Tank" class="tank-icon"> Tank</button>
             <button class="type-btn" id="btnInvasao" onclick="selectType('Invasão')">⚔️ Invasão</button>
+            <button class="type-btn" id="btnRanking" onclick="selectType('Ranking')">🏆 Ranking</button>
           </div>
 
           <div class="settings-dropdown-wrapper">
@@ -1549,6 +1591,16 @@
             
             <div class="settings-popover" id="settingsPopover">
               <div class="popover-header">⚙️ Configurações</div>
+
+              <button
+                class="btn-action btn-profile"
+                id="btnEditProfile"
+                type="button"
+                style="display:none"
+                onclick="abrirPerfilRanking(event)"
+              >
+                👤 Editar Perfil
+              </button>
 
               <button class="btn-action btn-compact" id="btnCompact" onclick="toggleCompactMode()">
                 📱 Modo Mini: <span id="compactStatusText">OFF</span>
@@ -1581,7 +1633,12 @@
         <div id="actionButtonsContainer"></div>
       </div>
 
-      <section class="card ranking-card" aria-labelledby="rankingTitle">
+      <section
+        class="card ranking-card"
+        id="rankingSection"
+        aria-labelledby="rankingTitle"
+        style="display:none"
+      >
         <div class="ranking-header">
           <h2 id="rankingTitle">🏆 Ranking de Resets</h2>
         </div>
@@ -1590,27 +1647,6 @@
           Todos podem visualizar. Os resets entram automaticamente no ranking
           quando o cooldown termina e o usuário está conectado ao Discord.
         </p>
-
-        <div class="ranking-nickname">
-          <label for="rankingNicknameInput">Nick exibido no ranking</label>
-          <input
-            id="rankingNicknameInput"
-            type="text"
-            minlength="2"
-            maxlength="32"
-            autocomplete="off"
-            disabled
-          >
-          <button
-            id="rankingNicknameSave"
-            type="button"
-            onclick="salvarNicknameRanking()"
-            disabled
-          >
-            Salvar nick
-          </button>
-          <span id="rankingNicknameStatus" role="status" aria-live="polite"></span>
-        </div>
 
         <div class="ranking-tabs" role="tablist" aria-label="Categoria do ranking">
           <button
@@ -2185,8 +2221,18 @@
     if (type === 'Helicóptero') document.getElementById('btnHeli').classList.add('active');
     if (type === 'Tank') document.getElementById('btnTank').classList.add('active');
     if (type === 'Invasão') document.getElementById('btnInvasao').classList.add('active');
+    if (type === 'Ranking') document.getElementById('btnRanking').classList.add('active');
+
+    const rankingSection = document.getElementById('rankingSection');
+    if (rankingSection) {
+      rankingSection.style.display = type === 'Ranking' ? 'block' : 'none';
+    }
 
     renderActionButtons();
+
+    if (type === 'Ranking') {
+      rankingSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   function setControlMode(mode) {
@@ -2237,6 +2283,12 @@
     const container = document.getElementById('actionButtonsContainer');
     const modeContainer = document.getElementById('modeSelectorContainer');
     if (!container) return;
+
+    if (selectedVehicle === 'Ranking') {
+      if (modeContainer) modeContainer.style.display = 'none';
+      container.innerHTML = '';
+      return;
+    }
 
     if (modeContainer) {
       modeContainer.style.display = selectedVehicle === 'Invasão' ? 'none' : 'flex';

@@ -234,9 +234,16 @@
   function atualizarEditorNickname(perfil) {
     const input = getElemento("rankingNicknameInput");
     const botao = getElemento("rankingNicknameSave");
+    const botaoEditar = getElemento("btnEditProfile");
+
+    if (botaoEditar) {
+      botaoEditar.style.display = usuarioAtual ? "flex" : "none";
+    }
+
     if (!input || !botao) return;
 
     if (!usuarioAtual) {
+      fecharEditorPerfil();
       input.value = "";
       input.placeholder = "Entre com o Discord para escolher seu nick";
       input.disabled = true;
@@ -253,6 +260,28 @@
       : null;
 
     atualizarCooldownNickname();
+  }
+
+  function abrirEditorPerfil(event) {
+    event?.stopPropagation?.();
+    if (!usuarioAtual) return;
+
+    getElemento("settingsPopover")?.classList.remove("active");
+
+    const modal = getElemento("profileModal");
+    if (!modal) return;
+
+    modal.classList.add("active");
+    modal.setAttribute("aria-hidden", "false");
+    requestAnimationFrame(() => getElemento("rankingNicknameInput")?.focus());
+  }
+
+  function fecharEditorPerfil() {
+    const modal = getElemento("profileModal");
+    if (!modal) return;
+
+    modal.classList.remove("active");
+    modal.setAttribute("aria-hidden", "true");
   }
 
   function atualizarCooldownNickname() {
@@ -422,9 +451,21 @@
     atualizarCheckboxTodos();
   }
 
+  function configurarModalPerfil() {
+    const modal = getElemento("profileModal");
+    modal?.addEventListener("click", event => {
+      if (event.target === modal) fecharEditorPerfil();
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") fecharEditorPerfil();
+    });
+  }
+
   async function inicializarRanking() {
     conectarRegistroDeResets();
     configurarFiltros();
+    configurarModalPerfil();
     selecionarAba(categoriaAtual);
 
     const user = await window.getUsuarioDiscord?.();
@@ -440,6 +481,8 @@
 
   window.selecionarAbaRanking = selecionarAba;
   window.salvarNicknameRanking = salvarNickname;
+  window.abrirPerfilRanking = abrirEditorPerfil;
+  window.fecharPerfilRanking = fecharEditorPerfil;
   window.getCooldownDurationSeconds = key => {
     const value = temposCooldown[key];
     return Number.isFinite(value) && value > 0 ? value : null;
