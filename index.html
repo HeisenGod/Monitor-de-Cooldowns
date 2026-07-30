@@ -504,11 +504,8 @@
       filter: grayscale(1);
     }
 
-    .farm-ranking {
-      width: 100%;
-      margin-top: 24px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
+    .ranking-card {
+      border-color: rgba(245, 158, 11, 0.35);
     }
 
     .ranking-header {
@@ -519,47 +516,83 @@
       margin-bottom: 8px;
     }
 
-    .ranking-header h3 {
-      font-size: 1.05rem;
+    .ranking-header h2 {
+      font-size: 1.2rem;
       color: #fbbf24;
     }
 
     .ranking-description {
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       color: var(--text-muted);
       font-size: 0.86rem;
       line-height: 1.5;
     }
 
-    .ranking-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
+    .ranking-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
     }
 
-    .ranking-submit {
-      border: 1px solid var(--vip-gold);
+    .ranking-tab {
+      padding: 10px 8px;
+      border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 9px 14px;
-      background: rgba(245, 158, 11, 0.15);
-      color: #fbbf24;
+      background: #0f1117;
+      color: var(--text-muted);
       font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ranking-tab:hover,
+    .ranking-tab.active {
+      border-color: var(--vip-gold);
+      background: rgba(245, 158, 11, 0.14);
+      color: #fbbf24;
+    }
+
+    .ranking-filters {
+      padding: 12px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .ranking-filters legend {
+      padding: 0 7px;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .ranking-filter-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+    }
+
+    .ranking-filter-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-main);
+      font-size: 0.82rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .ranking-filter-option input {
+      accent-color: var(--vip-gold);
       cursor: pointer;
     }
 
-    .ranking-submit:hover:not(:disabled) {
-      background: var(--vip-gold);
-      color: #111827;
-    }
-
-    .ranking-submit:disabled {
-      opacity: 0.5;
-      cursor: wait;
-    }
-
     #rankingStatus {
+      display: block;
+      min-height: 18px;
+      margin-bottom: 10px;
       color: var(--text-muted);
       font-size: 0.82rem;
     }
@@ -577,7 +610,7 @@
     .ranking-table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 420px;
+      min-width: 650px;
     }
 
     .ranking-table th,
@@ -605,24 +638,73 @@
       font-weight: 900;
     }
 
-    .ranking-player {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      font-weight: 700;
+    .ranking-avatar-cell {
+      width: 64px;
     }
 
-    .ranking-player img {
-      width: 30px;
-      height: 30px;
+    .ranking-avatar-cell img,
+    .ranking-avatar-fallback {
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
+    }
+
+    .ranking-avatar-cell img {
+      display: block;
       object-fit: cover;
     }
 
-    .ranking-time {
-      font-family: monospace;
-      font-size: 0.95rem;
+    .ranking-avatar-fallback {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #262a36;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .ranking-player-name {
       font-weight: 800;
+    }
+
+    .ranking-user-tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #0f1117;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .ranking-user-tag.vip_tier_1 {
+      border-color: #60a5fa;
+      color: #93c5fd;
+    }
+
+    .ranking-user-tag.vip_tier_2 {
+      border-color: #8b5cf6;
+      color: #c4b5fd;
+    }
+
+    .ranking-user-tag.vip_tier_3 {
+      border-color: #ec4899;
+      color: #f9a8d4;
+    }
+
+    .ranking-user-tag.el_patrono {
+      border-color: var(--vip-gold);
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+    }
+
+    .ranking-reset-count {
+      font-family: monospace;
+      font-size: 1rem;
+      text-align: center !important;
+      font-weight: 900;
       color: #a5b4fc;
     }
 
@@ -1717,49 +1799,105 @@
           </div>
         </div>
 
-        <section class="farm-ranking" aria-labelledby="rankingTitle">
-          <div class="ranking-header">
-            <h3 id="rankingTitle">🏆 Ranking de Farm</h3>
-            <button class="auth-button" type="button" onclick="carregarRankingFarm()">
-              Atualizar
-            </button>
-          </div>
-
-          <p class="ranking-description">
-            Todos podem ver o ranking. Para registrar o tempo atual do cronômetro,
-            é necessário entrar com o Discord.
-          </p>
-
-          <div class="ranking-actions">
-            <button
-              class="ranking-submit"
-              id="btnParticiparRanking"
-              type="button"
-              onclick="participarDoRanking()"
-            >
-              Entrar com Discord para participar
-            </button>
-            <span id="rankingStatus" role="status" aria-live="polite"></span>
-          </div>
-
-          <div class="ranking-table-wrap">
-            <table class="ranking-table">
-              <thead>
-                <tr>
-                  <th>Posição</th>
-                  <th>Jogador</th>
-                  <th>Tempo</th>
-                </tr>
-              </thead>
-              <tbody id="rankingBody">
-                <tr>
-                  <td class="ranking-empty" colspan="3">Carregando ranking...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
       </div>
+
+      <section class="card ranking-card" aria-labelledby="rankingTitle">
+        <div class="ranking-header">
+          <h2 id="rankingTitle">🏆 Ranking de Resets</h2>
+          <button class="auth-button" type="button" onclick="carregarRanking()">
+            Atualizar
+          </button>
+        </div>
+
+        <p class="ranking-description">
+          Todos podem visualizar. Os resets entram automaticamente no ranking
+          quando o cooldown termina e o usuário está conectado ao Discord.
+        </p>
+
+        <div class="ranking-tabs" role="tablist" aria-label="Categoria do ranking">
+          <button
+            class="ranking-tab active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            data-category="helicoptero"
+            onclick="selecionarAbaRanking('helicoptero')"
+          >
+            🚁 Helicóptero
+          </button>
+          <button
+            class="ranking-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            data-category="tanque"
+            onclick="selecionarAbaRanking('tanque')"
+          >
+            🛡️ Tanque
+          </button>
+          <button
+            class="ranking-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            data-category="invasao"
+            onclick="selecionarAbaRanking('invasao')"
+          >
+            ⚔️ Invasões
+          </button>
+        </div>
+
+        <fieldset class="ranking-filters">
+          <legend>Mostrar tipos de usuário</legend>
+          <div class="ranking-filter-list">
+            <label class="ranking-filter-option">
+              <input id="rankingFilterTodos" type="checkbox" checked>
+              Todos
+            </label>
+            <label class="ranking-filter-option">
+              <input class="ranking-type-filter" type="checkbox" value="normal" checked>
+              Usuários normais
+            </label>
+            <label class="ranking-filter-option">
+              <input class="ranking-type-filter" type="checkbox" value="vip_tier_1" checked>
+              VIP Tier 1
+            </label>
+            <label class="ranking-filter-option">
+              <input class="ranking-type-filter" type="checkbox" value="vip_tier_2" checked>
+              VIP Tier 2
+            </label>
+            <label class="ranking-filter-option">
+              <input class="ranking-type-filter" type="checkbox" value="vip_tier_3" checked>
+              VIP Tier 3
+            </label>
+            <label class="ranking-filter-option">
+              <input class="ranking-type-filter" type="checkbox" value="el_patrono" checked>
+              El Patrono
+            </label>
+          </div>
+        </fieldset>
+
+        <span id="rankingStatus" role="status" aria-live="polite"></span>
+
+        <div class="ranking-table-wrap">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>Posição</th>
+                <th>Foto</th>
+                <th>Usuário</th>
+                <th>Tipo</th>
+                <th style="text-align:center">Resets</th>
+              </tr>
+            </thead>
+            <tbody id="rankingBody">
+              <tr>
+                <td class="ranking-empty" colspan="5">Carregando ranking...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <div class="card">
         <details>
@@ -1876,14 +2014,6 @@
     elapsedMs: 0,
     startTime: null,
     isRunning: false
-  };
-
-  window.getFarmRankingSeconds = function() {
-    const elapsedMs = farmStopwatchState.isRunning
-      ? Date.now() - farmStopwatchState.startTime
-      : farmStopwatchState.elapsedMs;
-
-    return Math.max(0, Math.floor(elapsedMs / 1000));
   };
 
   /* SISTEMA DE CONTROLE DE ÁUDIO, FILA (QUEUE) E AUDIO DUCKING */

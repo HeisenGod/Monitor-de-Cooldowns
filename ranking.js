@@ -1,5 +1,20 @@
 (() => {
-  const TABELA_RANKING = "farm_rankings";
+  const CATEGORIAS = {
+    helicoptero: "Helicóptero",
+    tanque: "Tanque",
+    invasao: "Invasões"
+  };
+
+  const TIPOS_USUARIO = {
+    normal: "Normal",
+    vip_tier_1: "VIP Tier 1",
+    vip_tier_2: "VIP Tier 2",
+    vip_tier_3: "VIP Tier 3",
+    el_patrono: "El Patrono"
+  };
+
+  let categoriaAtual = "helicoptero";
+  let registrosAtuais = [];
 
   function getElemento(id) {
     return document.getElementById(id);
@@ -13,12 +28,36 @@
     status.dataset.tipo = tipo;
   }
 
-  function formatarDuracao(segundos) {
-    const total = Math.max(0, Number(segundos) || 0);
-    const h = Math.floor(total / 3600);
-    const m = Math.floor((total % 3600) / 60);
-    const s = Math.floor(total % 60);
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  function normalizarCategoria(itemName) {
+    const nome = String(itemName || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+    if (nome.includes("helicoptero")) return "helicoptero";
+    if (nome.includes("tank") || nome.includes("tanque")) return "tanque";
+    if (nome.includes("invasao")) return "invasao";
+    return null;
+  }
+
+  function getTiposSelecionados() {
+    return [...document.querySelectorAll(".ranking-type-filter:checked")]
+      .map(input => input.value);
+  }
+
+  function atualizarCheckboxTodos() {
+    const todos = getElemento("rankingFilterTodos");
+    const filtros = [...document.querySelectorAll(".ranking-type-filter")];
+    if (!todos || !filtros.length) return;
+
+    const marcados = filtros.filter(input => input.checked).length;
+    todos.checked = marcados === filtros.length;
+    todos.indeterminate = marcados > 0 && marcados < filtros.length;
+  }
+
+  function obterPerfil(registro) {
+    const perfil = registro.profile;
+    return Array.isArray(perfil) ? perfil[0] : perfil;
   }
 
   function criarCelula(texto, classe = "") {
@@ -28,152 +67,203 @@
     return td;
   }
 
-  function renderizarRanking(registros) {
+  function criarAvatar(perfil) {
+    const celula = document.createElement("td");
+    celula.className = "ranking-avatar-cell";
+
+    if (perfil?.discord_avatar) {
+      const img = document.createElement("img");
+      img.src = perfil.discord_avatar;
+      img.alt = `Foto de ${perfil.discord_name || "usuário"}`;
+      img.loading = "lazy";
+      celula.appendChild(img);
+      return celula;
+    }
+
+    const fallback = document.createElement("span");
+    fallback.className = "ranking-avatar-fallback";
+    fallback.textContent = (perfil?.discord_name || "?").charAt(0).toUpperCase();
+    celula.appendChild(fallback);
+    return celula;
+  }
+
+  function criarTagTipo(tipo) {
+    const celula = document.createElement("td");
+    const tag = document.createElement("span");
+    const tipoValido = TIPOS_USUARIO[tipo] ? tipo : "normal";
+
+    tag.className = `ranking-user-tag ${tipoValido}`;
+    tag.textContent = TIPOS_USUARIO[tipoValido];
+    celula.appendChild(tag);
+    return celula;
+  }
+
+  function renderizarRanking() {
     const corpo = getElemento("rankingBody");
     if (!corpo) return;
 
+    const tiposSelecionados = new Set(getTiposSelecionados());
+    const registrosFiltrados = registrosAtuais
+      .filter(registro => {
+        const perfil = obterPerfil(registro);
+        return perfil && tiposSelecionados.has(perfil.user_type);
+      })
+      .sort((a, b) => Number(b.reset_count) - Number(a.reset_count));
+
     corpo.replaceChildren();
 
-    if (!registros.length) {
+    if (!registrosFiltrados.length) {
       const linha = document.createElement("tr");
-      const celula = criarCelula("Ainda não há tempos registrados.", "ranking-empty");
-      celula.colSpan = 3;
+      const celula = criarCelula(
+        tiposSelecionados.size
+          ? "Nenhum usuário encontrado para estes filtros."
+          : "Marque pelo menos um tipo de usuário.",
+        "ranking-empty"
+      );
+      celula.colSpan = 5;
       linha.appendChild(celula);
       corpo.appendChild(linha);
       return;
     }
 
-    registros.forEach((registro, indice) => {
+    registrosFiltrados.forEach((registro, indice) => {
+      const perfil = obterPerfil(registro);
       const linha = document.createElement("tr");
-      const posicao = criarCelula(`${indice + 1}º`, "ranking-position");
 
-      const jogador = document.createElement("td");
-      jogador.className = "ranking-player";
-
-      if (registro.discord_avatar) {
-        const avatar = document.createElement("img");
-        avatar.src = registro.discord_avatar;
-        avatar.alt = "";
-        avatar.loading = "lazy";
-        jogador.appendChild(avatar);
-      }
-
-      const nome = document.createElement("span");
-      nome.textContent = registro.discord_name || "Jogador";
-      jogador.appendChild(nome);
-
-      const tempo = criarCelula(
-        formatarDuracao(registro.total_seconds),
-        "ranking-time"
+      linha.append(
+        criarCelula(`${indice + 1}º`, "ranking-position"),
+        criarAvatar(perfil),
+        criarCelula(perfil.discord_name || "Usuário do Discord", "ranking-player-name"),
+        criarTagTipo(perfil.user_type),
+        criarCelula(String(registro.reset_count || 0), "ranking-reset-count")
       );
 
-      linha.append(posicao, jogador, tempo);
       corpo.appendChild(linha);
     });
   }
 
-  async function carregarRankingFarm() {
+  async function carregarRanking() {
     const client = window.supabaseClient;
     if (!client) {
       definirStatus("Ranking indisponível: Supabase não foi carregado.", "erro");
       return;
     }
 
-    definirStatus("Carregando ranking...");
+    definirStatus(`Carregando ranking de ${CATEGORIAS[categoriaAtual]}...`);
 
     const { data, error } = await client
-      .from(TABELA_RANKING)
-      .select("user_id, discord_name, discord_avatar, total_seconds, updated_at")
-      .order("total_seconds", { ascending: false })
-      .limit(50);
+      .from("ranking_resets")
+      .select(`
+        reset_count,
+        profile:ranking_profiles!inner (
+          discord_name,
+          discord_avatar,
+          user_type
+        )
+      `)
+      .eq("category", categoriaAtual)
+      .order("reset_count", { ascending: false })
+      .limit(500);
 
     if (error) {
       console.error("Erro ao carregar o ranking:", error.message);
       definirStatus(
-        "Não foi possível carregar. Execute o arquivo supabase-setup.sql no Supabase.",
+        "Não foi possível carregar. Execute o arquivo supabase-ranking.sql.",
         "erro"
       );
       return;
     }
 
-    renderizarRanking(data ?? []);
-    definirStatus(`Ranking atualizado: ${(data ?? []).length} jogador(es).`, "sucesso");
+    registrosAtuais = data ?? [];
+    renderizarRanking();
+    definirStatus(
+      `${registrosAtuais.length} jogador(es) em ${CATEGORIAS[categoriaAtual]}.`,
+      "sucesso"
+    );
   }
 
-  async function participarDoRanking() {
-    const botao = getElemento("btnParticiparRanking");
+  async function registrarResetNoRanking(itemName) {
+    const categoria = normalizarCategoria(itemName);
+    if (!categoria) return;
+
     const client = window.supabaseClient;
+    const user = await window.getUsuarioDiscord?.();
+    if (!client || !user) return;
 
-    if (!client) {
-      definirStatus("Supabase não foi carregado.", "erro");
-      return;
-    }
-
-    const user = await window.getUsuarioDiscord?.({ validarNoServidor: true });
-    if (!user) {
-      definirStatus("Entre com o Discord para registrar seu tempo.", "aviso");
-      await window.loginDiscord?.();
-      return;
-    }
-
-    if (typeof window.getFarmRankingSeconds !== "function") {
-      definirStatus("Não consegui ler o cronômetro de farm.", "erro");
-      return;
-    }
-
-    const totalSeconds = window.getFarmRankingSeconds();
-    if (totalSeconds < 1) {
-      definirStatus("Inicie o cronômetro de Farm antes de participar.", "aviso");
-      return;
-    }
-
-    if (botao) botao.disabled = true;
-    definirStatus("Salvando seu melhor tempo...");
-
-    const registro = {
-      user_id: user.id,
-      discord_name: window.getNomeDiscord?.(user) || "Usuário do Discord",
-      discord_avatar: window.getAvatarDiscord?.(user) || null,
-      total_seconds: totalSeconds,
-      updated_at: new Date().toISOString()
-    };
-
-    const { error } = await client
-      .from(TABELA_RANKING)
-      .upsert(registro, { onConflict: "user_id" });
-
-    if (botao) botao.disabled = false;
+    const { error } = await client.rpc("register_ranking_reset", {
+      p_category: categoria
+    });
 
     if (error) {
-      console.error("Erro ao salvar no ranking:", error.message);
-      definirStatus("Não foi possível salvar seu tempo.", "erro");
+      console.error("Erro ao registrar reset no ranking:", error.message);
+      definirStatus("O reset local foi salvo, mas o ranking não pôde ser atualizado.", "erro");
       return;
     }
 
-    definirStatus("Seu tempo foi registrado no ranking!", "sucesso");
-    await carregarRankingFarm();
+    if (categoriaAtual === categoria) {
+      await carregarRanking();
+    }
   }
 
-  function atualizarBotaoParticipacao(user) {
-    const botao = getElemento("btnParticiparRanking");
-    if (!botao) return;
+  function selecionarAba(categoria) {
+    if (!CATEGORIAS[categoria]) return;
+    categoriaAtual = categoria;
 
-    botao.textContent = user
-      ? "🏆 Registrar meu tempo"
-      : "Entrar com Discord para participar";
+    document.querySelectorAll(".ranking-tab").forEach(botao => {
+      const ativo = botao.dataset.category === categoria;
+      botao.classList.toggle("active", ativo);
+      botao.setAttribute("aria-selected", String(ativo));
+    });
+
+    carregarRanking();
+  }
+
+  function conectarRegistroDeResets() {
+    const registroOriginal = window.registerReset;
+    if (typeof registroOriginal !== "function" || registroOriginal.rankingConectado) {
+      return;
+    }
+
+    function registroComRanking(...args) {
+      const resultado = registroOriginal.apply(this, args);
+      registrarResetNoRanking(args[0]);
+      return resultado;
+    }
+
+    registroComRanking.rankingConectado = true;
+    window.registerReset = registroComRanking;
+  }
+
+  function configurarFiltros() {
+    const todos = getElemento("rankingFilterTodos");
+    const filtros = [...document.querySelectorAll(".ranking-type-filter")];
+
+    todos?.addEventListener("change", () => {
+      filtros.forEach(input => {
+        input.checked = todos.checked;
+      });
+      todos.indeterminate = false;
+      renderizarRanking();
+    });
+
+    filtros.forEach(input => {
+      input.addEventListener("change", () => {
+        atualizarCheckboxTodos();
+        renderizarRanking();
+      });
+    });
+
+    atualizarCheckboxTodos();
   }
 
   function inicializarRanking() {
-    atualizarBotaoParticipacao(null);
-    carregarRankingFarm();
+    conectarRegistroDeResets();
+    configurarFiltros();
+    selecionarAba(categoriaAtual);
   }
 
-  window.carregarRankingFarm = carregarRankingFarm;
-  window.participarDoRanking = participarDoRanking;
-
-  window.addEventListener("discord-auth-changed", (event) => {
-    atualizarBotaoParticipacao(event.detail?.user ?? null);
-  });
+  window.carregarRanking = carregarRanking;
+  window.selecionarAbaRanking = selecionarAba;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", inicializarRanking, { once: true });
