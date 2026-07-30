@@ -48,6 +48,53 @@
       transition: all 0.3s ease;
     }
 
+    .login-box {
+      width: 100%;
+      max-width: 1200px;
+      min-height: 42px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .auth-button {
+      border: 1px solid #5865f2;
+      border-radius: 9px;
+      padding: 9px 14px;
+      background: rgba(88, 101, 242, 0.16);
+      color: #c7d2fe;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .auth-button:hover {
+      background: #5865f2;
+      color: #fff;
+    }
+
+    #perfil {
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 6px 8px 6px 6px;
+      background: var(--card-bg);
+    }
+
+    #perfil img {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    #nomeUsuario {
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
     /* PRELOADER FUTURISTA */
     #preloader {
       position: fixed;
@@ -455,6 +502,133 @@
       opacity: 0.4;
       cursor: not-allowed;
       filter: grayscale(1);
+    }
+
+    .farm-ranking {
+      width: 100%;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .ranking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .ranking-header h3 {
+      font-size: 1.05rem;
+      color: #fbbf24;
+    }
+
+    .ranking-description {
+      margin-bottom: 14px;
+      color: var(--text-muted);
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .ranking-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .ranking-submit {
+      border: 1px solid var(--vip-gold);
+      border-radius: 8px;
+      padding: 9px 14px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .ranking-submit:hover:not(:disabled) {
+      background: var(--vip-gold);
+      color: #111827;
+    }
+
+    .ranking-submit:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+
+    #rankingStatus {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    #rankingStatus[data-tipo="sucesso"] { color: #34d399; }
+    #rankingStatus[data-tipo="aviso"] { color: #fbbf24; }
+    #rankingStatus[data-tipo="erro"] { color: #f87171; }
+
+    .ranking-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .ranking-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 420px;
+    }
+
+    .ranking-table th,
+    .ranking-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .ranking-table th {
+      background: #0f1117;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .ranking-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .ranking-position {
+      width: 70px;
+      color: #fbbf24;
+      font-weight: 900;
+    }
+
+    .ranking-player {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 700;
+    }
+
+    .ranking-player img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .ranking-time {
+      font-family: monospace;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #a5b4fc;
+    }
+
+    .ranking-empty {
+      text-align: center !important;
+      color: var(--text-muted);
     }
 
     .controls-grid {
@@ -1357,27 +1531,17 @@
 
 
 
-	<div class="login-box">
+  <div class="login-box">
+    <button id="btnLogin" class="auth-button" onclick="loginDiscord()">
+      Entrar com Discord
+    </button>
 
-		<button id="btnLogin" onclick="loginDiscord()">
-
-		Entrar com Discord
-
-		</button>
-
-		<div id="perfil" style="display:none">
-
-		<img id="avatar" width="40">
-
-		<span id="nomeUsuario"></span>
-
-		<button onclick="logout()">
-
-		Sair
-
-		</button>
-
-	</div>
+    <div id="perfil" style="display:none">
+      <img id="avatar" alt="Avatar do Discord">
+      <span id="nomeUsuario"></span>
+      <button class="auth-button" onclick="logout()">Sair</button>
+    </div>
+  </div>
 
   <!-- PRELOADER FUTURISTA -->
   <div id="preloader">
@@ -1552,6 +1716,49 @@
             <button class="btn-farm-reset" onclick="resetFarmStopwatch()">🔄 Zerar</button>
           </div>
         </div>
+
+        <section class="farm-ranking" aria-labelledby="rankingTitle">
+          <div class="ranking-header">
+            <h3 id="rankingTitle">🏆 Ranking de Farm</h3>
+            <button class="auth-button" type="button" onclick="carregarRankingFarm()">
+              Atualizar
+            </button>
+          </div>
+
+          <p class="ranking-description">
+            Todos podem ver o ranking. Para registrar o tempo atual do cronômetro,
+            é necessário entrar com o Discord.
+          </p>
+
+          <div class="ranking-actions">
+            <button
+              class="ranking-submit"
+              id="btnParticiparRanking"
+              type="button"
+              onclick="participarDoRanking()"
+            >
+              Entrar com Discord para participar
+            </button>
+            <span id="rankingStatus" role="status" aria-live="polite"></span>
+          </div>
+
+          <div class="ranking-table-wrap">
+            <table class="ranking-table">
+              <thead>
+                <tr>
+                  <th>Posição</th>
+                  <th>Jogador</th>
+                  <th>Tempo</th>
+                </tr>
+              </thead>
+              <tbody id="rankingBody">
+                <tr>
+                  <td class="ranking-empty" colspan="3">Carregando ranking...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
       <div class="card">
@@ -1669,6 +1876,14 @@
     elapsedMs: 0,
     startTime: null,
     isRunning: false
+  };
+
+  window.getFarmRankingSeconds = function() {
+    const elapsedMs = farmStopwatchState.isRunning
+      ? Date.now() - farmStopwatchState.startTime
+      : farmStopwatchState.elapsedMs;
+
+    return Math.max(0, Math.floor(elapsedMs / 1000));
   };
 
   /* SISTEMA DE CONTROLE DE ÁUDIO, FILA (QUEUE) E AUDIO DUCKING */
@@ -2770,13 +2985,4 @@
   });
 </script>
 </body>
-<script>
-
-window.onload=()=>{
-
-    verificarLogin();
-
-}
-
-</script>
 </html>
