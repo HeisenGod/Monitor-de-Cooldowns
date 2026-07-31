@@ -1,6 +1,8 @@
 (() => {
   const AUTO_REFRESH_MS = 10 * 60 * 1000;
   const NICKNAME_COOLDOWN_MS = 10 * 60 * 1000;
+  const HIDDEN_AVATAR_PATH = "img/icons/Usuario.png";
+  const NICKNAME_REGEX = /^[A-Za-z0-9]{2,32}$/;
 
   const CATEGORIAS = {
     helicoptero: "Helicóptero",
@@ -22,6 +24,7 @@
   let tipoUsuarioAtual = "normal";
   let temposCooldown = {};
   let proximaTrocaNickname = null;
+  let banimentoEmAndamento = false;
 
   function getElemento(id) {
     return document.getElementById(id);
@@ -86,19 +89,35 @@
     const celula = document.createElement("td");
     celula.className = "ranking-avatar-cell";
 
-    if (perfil?.discord_avatar) {
+    const criarFallback = () => {
+      const fallback = document.createElement("span");
+      fallback.className = "ranking-avatar-fallback";
+      fallback.textContent = (perfil?.display_name || "?").charAt(0).toUpperCase();
+      return fallback;
+    };
+
+    const avatarUrl = perfil?.hide_avatar
+      ? HIDDEN_AVATAR_PATH
+      : perfil?.discord_avatar;
+
+    if (avatarUrl) {
       const img = document.createElement("img");
-      img.src = perfil.discord_avatar;
+      img.src = avatarUrl;
       img.alt = `Foto de ${perfil.display_name || "usuário"}`;
       img.loading = "lazy";
+      img.addEventListener("error", () => {
+        if (!perfil?.hide_avatar && img.src !== new URL(HIDDEN_AVATAR_PATH, document.baseURI).href) {
+          img.src = HIDDEN_AVATAR_PATH;
+          return;
+        }
+
+        img.replaceWith(criarFallback());
+      });
       celula.appendChild(img);
       return celula;
     }
 
-    const fallback = document.createElement("span");
-    fallback.className = "ranking-avatar-fallback";
-    fallback.textContent = (perfil?.display_name || "?").charAt(0).toUpperCase();
-    celula.appendChild(fallback);
+    celula.appendChild(criarFallback());
     return celula;
   }
 
@@ -173,7 +192,8 @@
         profile:ranking_profiles!inner (
           display_name,
           discord_avatar,
-          user_type
+          user_type,
+          hide_avatar
         )
       `)
       .eq("category", categoriaAtual)
@@ -213,6 +233,56 @@
     );
   }
 
+  function escaparHtml(texto) {
+    const elemento = document.createElement("span");
+    elemento.textContent = String(texto || "");
+    return elemento.innerHTML;
+  }
+
+  function erroEhBanimento(error) {
+    return String(error?.message || "").toLowerCase().includes("banido");
+  }
+
+  async function finalizarSessaoBanida(motivo) {
+    if (banimentoEmAndamento) return;
+    banimentoEmAndamento = true;
+
+    usuarioAtual = null;
+    tipoUsuarioAtual = "normal";
+    atualizarEditorNickname(null);
+    notificarEstatisticasUsuario(null);
+    definirStatus("Esta conta está banida e não aparece no ranking.", "erro");
+
+    const motivoSeguro = motivo
+      ? `<br><br><strong>Motivo:</strong> ${escaparHtml(motivo)}`
+      : "";
+
+    if (typeof window.showCustomModal === "function") {
+      await window.showCustomModal({
+        title: "Usuário banido",
+        message: `Sua conta foi banida e a sessão será encerrada.${motivoSeguro}`,
+        icon: "🚫",
+        confirmText: "Entendi",
+        alertOnly: true,
+        isDanger: true
+      });
+    } else {
+      window.alert(`Sua conta foi banida.${motivo ? `\nMotivo: ${motivo}` : ""}`);
+    }
+
+    try {
+      await window.logout?.();
+    } finally {
+      window.location.replace(`${window.location.origin}${window.location.pathname}`);
+    }
+  }
+
+  async function tratarErroBanimento(error) {
+    if (!erroEhBanimento(error)) return false;
+    await finalizarSessaoBanida(null);
+    return true;
+  }
+
   async function carregarEstatisticasUsuario() {
     if (!usuarioAtual) {
       notificarEstatisticasUsuario(null);
@@ -225,6 +295,7 @@
     const { data, error } = await client.rpc("get_my_reset_stats");
 
     if (error) {
+      if (await tratarErroBanimento(error)) return;
       console.error("Erro ao carregar totais do usuário:", error.message);
       return;
     }
@@ -358,6 +429,7 @@
     const { data, error } = await client.rpc("sync_ranking_profile");
 
     if (error) {
+      if (await tratarErroBanimento(error)) return;
       console.error("Erro ao sincronizar perfil do ranking:", error.message);
       atualizarEditorNickname(null);
       await carregarTemposCooldown("normal");
@@ -365,6 +437,13 @@
     }
 
     const perfil = Array.isArray(data) ? data[0] : data;
+
+    if (perfil?.is_banned) {
+      await finalizarSessaoBanida(perfil.ban_reason);
+      return;
+    }
+
+    banimentoEmAndamento = false;
     tipoUsuarioAtual = TIPOS_USUARIO[perfil?.user_type]
       ? perfil.user_type
       : "normal";
@@ -386,8 +465,11 @@
       return;
     }
 
-    if (nickname.length < 2 || nickname.length > 32) {
-      definirStatusNickname("Use um nick entre 2 e 32 caracteres.", "erro");
+    if (!NICKNAME_REGEX.test(nickname)) {
+      definirStatusNickname(
+        "Use somente A-Z, a-z e 0-9, com 2 a 32 caracteres.",
+        "erro"
+      );
       return;
     }
 
@@ -400,9 +482,10 @@
     );
 
     if (error) {
+      if (await tratarErroBanimento(error)) return;
       console.error("Erro ao trocar o nick:", error.message);
-      definirStatusNickname(error.message || "Não foi possível trocar o nick.", "erro");
       atualizarCooldownNickname();
+      definirStatusNickname(error.message || "Não foi possível trocar o nick.", "erro");
       return;
     }
 
@@ -426,6 +509,7 @@
     });
 
     if (error) {
+      if (await tratarErroBanimento(error)) return;
       console.error("Erro ao registrar reset no ranking:", error.message);
       definirStatus("O reset local foi salvo, mas o ranking não pôde ser atualizado.", "erro");
       return;
@@ -491,8 +575,18 @@
 
   function configurarModalPerfil() {
     const modal = getElemento("profileModal");
+    const input = getElemento("rankingNicknameInput");
+
     modal?.addEventListener("click", event => {
       if (event.target === modal) fecharEditorPerfil();
+    });
+
+    input?.addEventListener("input", () => {
+      const valorFiltrado = input.value.replace(/[^A-Za-z0-9]/g, "");
+      if (valorFiltrado !== input.value) {
+        input.value = valorFiltrado;
+        definirStatusNickname("Use apenas A-Z, a-z e 0-9.", "aviso");
+      }
     });
 
     document.addEventListener("keydown", event => {

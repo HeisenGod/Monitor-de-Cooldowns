@@ -1498,10 +1498,13 @@
             type="text"
             minlength="2"
             maxlength="32"
+            pattern="[A-Za-z0-9]+"
+            title="Use apenas letras de A a Z e números de 0 a 9"
             autocomplete="off"
+            spellcheck="false"
             disabled
           >
-          <span id="rankingNicknameStatus" role="status" aria-live="polite"></span>
+          <span id="rankingNicknameStatus" role="status" aria-live="polite">Use apenas A-Z, a-z e 0-9.</span>
         </div>
       </div>
       <div class="modal-footer">
