@@ -2712,7 +2712,7 @@
 #audioBtn{margin-top:20px;width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#5865F2,#3b82f6);color:white;transition:.2s}
 #audioBtn:hover{transform:translateY(-2px);filter:brightness(1.08)}
 </style>
-<div id="audioOverlay"><div id="audioCard"><h2>🔔 Ativar alertas sonoros</h2><p>Os navegadores exigem uma interação para permitir sons. Clique abaixo apenas uma vez para habilitar os avisos dos cooldowns.</p><button id="audioBtn">Ativar monitor</button></div></div>
+<div id="audioOverlay"><div id="audioCard"><h2>🔔 Ativar alertas sonoros</h2><p>Antes de continuar, ative os alertas sonoros para ser avisado automaticamente quando um cooldown chegar ao fim.</p><button id="audioBtn">Ativar alertas</button></div></div>
 <script>
 document.getElementById('audioBtn')?.addEventListener('click',async()=>{
  try{const a=new Audio('data:audio/mp3;base64,//uQZAAAAAAAA');try{await a.play();}catch(e){} a.pause(); a.currentTime=0;}catch(e){}
