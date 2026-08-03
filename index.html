@@ -9,7 +9,11 @@
 
 	<script src="supabase.js"></script>
 
+	<script src="supabase/functions/_shared/discord-vip-config.js"></script>
+
 	<script src="auth.js"></script>
+
+	<script src="discord-vip.js"></script>
 
 	<script src="ranking.js"></script>
 
@@ -1979,7 +1983,7 @@
   }
 
   /* GERENCIADOR DO POPUP/MODAL CUSTOMIZADO */
-  function showCustomModal({ title = 'Aviso', message = '', icon = '⚠️', confirmText = 'Confirmar', cancelText = 'Cancelar', isDanger = false, alertOnly = false }) {
+  function showCustomModal({ title = 'Aviso', message = '', icon = '⚠️', confirmText = 'Confirmar', cancelText = 'Cancelar', isDanger = false, alertOnly = false, closeOnOverlay = true }) {
     return new Promise((resolve) => {
       const overlay = document.getElementById('customModal');
       const titleEl = document.getElementById('modalTitle');
@@ -2011,7 +2015,12 @@
 
       const onConfirm = () => { cleanup(); resolve(true); };
       const onCancel = () => { cleanup(); resolve(false); };
-      const onOverlayClick = (e) => { if (e.target === overlay) { cleanup(); resolve(false); } };
+      const onOverlayClick = (e) => {
+        if (closeOnOverlay && e.target === overlay) {
+          cleanup();
+          resolve(false);
+        }
+      };
 
       confirmBtn.addEventListener('click', onConfirm);
       cancelBtn.addEventListener('click', onCancel);

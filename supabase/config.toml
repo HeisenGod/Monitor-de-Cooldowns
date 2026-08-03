@@ -1,0 +1,2 @@
+[functions.sync-discord-vip]
+verify_jwt = true

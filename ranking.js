@@ -626,6 +626,11 @@
     carregarContextoUsuario(event.detail?.user ?? null);
   });
 
+  window.addEventListener("discord-vip-changed", () => {
+    carregarContextoUsuario(usuarioAtual);
+    carregarRanking();
+  });
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", inicializarRanking, { once: true });
   } else {

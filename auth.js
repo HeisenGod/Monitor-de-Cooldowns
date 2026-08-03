@@ -1,6 +1,44 @@
 (() => {
   let authInicializado = false;
+  let capturaTokenInicializada = false;
   let usuarioAtual = null;
+
+  function getDiscordVipConfig() {
+    return window.DISCORD_VIP_CONFIG ?? {};
+  }
+
+  function getProviderTokenStorageKey() {
+    return getDiscordVipConfig().PROVIDER_TOKEN_STORAGE_KEY
+      || "discord_oauth_provider_token";
+  }
+
+  function salvarProviderToken(session) {
+    const providerToken = session?.provider_token;
+    if (providerToken) {
+      window.sessionStorage.setItem(getProviderTokenStorageKey(), providerToken);
+    }
+  }
+
+  function removerProviderToken() {
+    window.sessionStorage.removeItem(getProviderTokenStorageKey());
+  }
+
+  function getDiscordProviderToken() {
+    return window.sessionStorage.getItem(getProviderTokenStorageKey()) || "";
+  }
+
+  function inicializarCapturaProviderToken() {
+    if (capturaTokenInicializada) return;
+    capturaTokenInicializada = true;
+
+    const client = getSupabaseClient();
+    if (!client) return;
+
+    client.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") removerProviderToken();
+      else salvarProviderToken(session);
+    });
+  }
 
   function getSupabaseClient() {
     return window.supabaseClient ?? null;
@@ -22,8 +60,9 @@
     return metadata.avatar_url || metadata.picture || "";
   }
 
-  function atualizarInterfaceLogin(user) {
+  function atualizarInterfaceLogin(user, session = null) {
     usuarioAtual = user ?? null;
+    salvarProviderToken(session);
 
     const btnLogin = document.getElementById("btnLogin");
     const perfil = document.getElementById("perfil");
@@ -41,7 +80,12 @@
     }
 
     window.dispatchEvent(
-      new CustomEvent("discord-auth-changed", { detail: { user: usuarioAtual } })
+      new CustomEvent("discord-auth-changed", {
+        detail: {
+          user: usuarioAtual,
+          providerToken: getDiscordProviderToken()
+        }
+      })
     );
   }
 
@@ -56,7 +100,10 @@
     const redirectTo = `${window.location.origin}${window.location.pathname}`;
     const { error } = await client.auth.signInWithOAuth({
       provider: "discord",
-      options: { redirectTo }
+      options: {
+        redirectTo,
+        scopes: getDiscordVipConfig().OAUTH_SCOPES || "guilds.members.read"
+      }
     });
 
     if (error) {
@@ -75,6 +122,7 @@
       return;
     }
 
+    removerProviderToken();
     atualizarInterfaceLogin(null);
   }
 
@@ -94,11 +142,10 @@
       return null;
     }
 
-    const user = validarNoServidor
-      ? result.data.user
-      : result.data.session?.user;
+    const session = validarNoServidor ? null : result.data.session;
+    const user = validarNoServidor ? result.data.user : session?.user;
 
-    atualizarInterfaceLogin(user ?? null);
+    atualizarInterfaceLogin(user ?? null, session);
     return user ?? null;
   }
 
@@ -116,8 +163,9 @@
       return;
     }
 
-    client.auth.onAuthStateChange((_event, session) => {
-      atualizarInterfaceLogin(session?.user ?? null);
+    client.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") removerProviderToken();
+      atualizarInterfaceLogin(session?.user ?? null, session);
     });
 
     verificarLogin();
@@ -129,6 +177,9 @@
   window.getUsuarioDiscord = getUsuarioDiscord;
   window.getNomeDiscord = getNomeDiscord;
   window.getAvatarDiscord = getAvatarDiscord;
+  window.getDiscordProviderToken = getDiscordProviderToken;
+
+  inicializarCapturaProviderToken();
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", inicializarAuth, { once: true });
